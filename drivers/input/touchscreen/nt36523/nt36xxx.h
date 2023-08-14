@@ -75,12 +75,12 @@ extern const uint16_t touch_key_array[TOUCH_KEY_NUM];
 #define NVT_TOUCH_SUPPORT_HW_RST 0
 
 //---Customerized func.---
-#define NVT_TOUCH_PROC 0
-#define NVT_TOUCH_EXT_PROC 0
-#define NVT_TOUCH_MP 0
-#define NVT_TOUCH_MP_SETTING_CRITERIA_FROM_CSV 0
+#define NVT_TOUCH_PROC 1
+#define NVT_TOUCH_EXT_PROC 1
+#define NVT_TOUCH_MP 1
+#define NVT_TOUCH_MP_SETTING_CRITERIA_FROM_CSV 1
 #define MT_PROTOCOL_B 1
-#define WAKEUP_GESTURE 0
+#define WAKEUP_GESTURE 1
 #define FUNCPAGE_PALM 4
 #define PACKET_PALM_ON 3
 #define PACKET_PALM_OFF 4

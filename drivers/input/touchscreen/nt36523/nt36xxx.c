@@ -1659,7 +1659,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 				input_report_key(ts->pen_input_dev, BTN_STYLUS2, pen_btn2);
 				input_sync(ts->pen_input_dev);
 				// TBD: pen battery event report
-				// NVT_LOG("pen_battery=%d\n", pen_battery);
+				NVT_LOG("pen_battery=%d\n", pen_battery);
 			} else if (pen_format_id == 0xF0) {
 				// report Pen ID
 			} else {
@@ -1988,7 +1988,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 #if ((TOUCH_KEY_NUM > 0) || WAKEUP_GESTURE)
 	int32_t retry = 0;
 #endif
-	NVT_LOG("probe start\n");
+	NVT_LOG("nvt_ts_probe start\n");
 
 	ts = kzalloc(sizeof(struct nvt_ts_data), GFP_KERNEL);
 	if (ts == NULL) {
