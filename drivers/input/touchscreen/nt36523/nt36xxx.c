@@ -1930,6 +1930,43 @@ void nvt_enable_doubleclick(void)
 	}
 }
 
+static int disable_pen_input_device(bool disable) {
+	uint8_t buf[8] = {0};
+	int32_t ret = 0;
+
+	NVT_LOG("++\n");
+	if (!bTouchIsAwake || !ts) {
+		NVT_LOG("touch suspend, stop set pen state %s", disable ? "DISABLE" : "ENABLE");
+		goto nvt_set_pen_enable_out;
+	}
+
+	msleep(35);
+	disable = (!(ts->pen_input_dev_enable) || ts->pen_is_charge) ? true : disable;
+
+	//---set xdata index to EVENT BUF ADDR---
+	ret = nvt_set_page(ts->mmap->EVENT_BUF_ADDR | EVENT_MAP_HOST_CMD);
+	if (ret < 0) {
+		NVT_ERR("Set event buffer index fail!\n");
+		goto nvt_set_pen_enable_out;
+	}
+
+	buf[0] = EVENT_MAP_HOST_CMD;
+	buf[1] = 0x7B;
+	buf[2] = !!disable;
+	ret = CTP_SPI_WRITE(ts->client, buf, 3);
+	if (ret < 0) {
+		NVT_ERR("set pen %s failed!\n", disable ? "DISABLE" : "ENABLE");
+		goto nvt_set_pen_enable_out;
+	}
+	NVT_LOG("pen charge state is %s, %s pen input device\n",
+	ts->pen_is_charge ? "ENABLE" : "DISABLE",
+	disable ? "DISABLE" : "ENABLE");
+
+nvt_set_pen_enable_out:
+	NVT_LOG("--\n");
+	return ret;
+}
+
 
 static void nvt_pen_charge_state_change_work(struct work_struct *work)
 {
