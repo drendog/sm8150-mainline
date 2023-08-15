@@ -1918,7 +1918,55 @@ static void nvt_resume_work(struct work_struct *work)
 	nvt_ts_resume(&ts_core->client->dev);
 }
 
+static int nvt_touchfeature_cmd_xsfer(uint8_t *touchfeature)
+{
+	int ret;
+	uint8_t buf[8] = {0};
 
+	NVT_LOG("++\n");
+	NVT_LOG("cmd xsfer:%02x, %02x", touchfeature[0], touchfeature[1]);
+	/* ---set xdata index to EVENT BUF ADDR--- */
+	ret = nvt_set_page(ts->mmap->EVENT_BUF_ADDR | EVENT_MAP_HOST_CMD);
+	if (ret < 0) {
+		NVT_ERR("Set event buffer index fail!\n");
+		goto nvt_touchfeature_cmd_xsfer_out;
+	}
+
+	buf[0] = EVENT_MAP_HOST_CMD;
+	buf[1] = touchfeature[0];
+	buf[2] = touchfeature[1];
+
+	ret = CTP_SPI_WRITE(ts->client, buf, 3);
+	if (ret < 0) {
+		NVT_ERR("Write sensitivity switch command fail!\n");
+		goto nvt_touchfeature_cmd_xsfer_out;
+	}
+
+nvt_touchfeature_cmd_xsfer_out:
+	NVT_LOG("--\n");
+	return ret;
+
+}
+
+static int nvt_touchfeature_set(uint8_t *touchfeature)
+{
+	int ret;
+	if (mutex_lock_interruptible(&ts->lock)) {
+		return -ERESTARTSYS;
+	}
+
+#if NVT_TOUCH_ESD_PROTECT
+	nvt_esd_check_enable(false);
+#endif /* #if NVT_TOUCH_ESD_PROTECT */
+
+	ret = nvt_touchfeature_cmd_xsfer(touchfeature);
+	if (ret < 0)
+		NVT_ERR("send cmd via SPI failed, errno:%d", ret);
+
+	mutex_unlock(&ts->lock);
+	msleep(35);
+	return ret;
+}
 
 #define PANEL_ORIENTATION_DEGREE_0		0	/* normal portrait orientation */
 #define PANEL_ORIENTATION_DEGREE_90		1	/* anticlockwise 90 degrees */
