@@ -582,7 +582,12 @@ enum power_supply_notifier_events {
 union power_supply_propval {
 	int intval;
 	const char *strval;
+	int64_t int64val;
+#if (defined CONFIG_BATT_VERIFY_BY_DS28E16 || defined CONFIG_BATT_VERIFY_BY_DS28E16_NABU)
+	unsigned char arrayval[50];
+#endif
 };
+
 
 struct device_node;
 struct power_supply;
