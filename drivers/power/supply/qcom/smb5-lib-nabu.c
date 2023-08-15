@@ -340,15 +340,18 @@ static void smblib_notify_extcon_props(struct smb_charger *chg, int id)
 	if (chg->connector_type == POWER_SUPPLY_CONNECTOR_TYPEC) {
 		smblib_get_prop_typec_cc_orientation(chg, &prop_val);
 		val.intval = ((prop_val.intval == 2) ? 1 : 0);
+		/*
 		extcon_set_property(chg->extcon, id,
 				EXTCON_PROP_USB_TYPEC_POLARITY, val);
 		val.intval = true;
 		extcon_set_property(chg->extcon, id,
-				EXTCON_PROP_USB_SS, val);
+				EXTCON_PROP_USB_SS, val); */
 	} else if (chg->connector_type == POWER_SUPPLY_CONNECTOR_MICRO_USB) {
 		val.intval = false;
+    /*
 		extcon_set_property(chg->extcon, id,
 				EXTCON_PROP_USB_SS, val);
+		*/
 	}
 }
 
@@ -357,7 +360,7 @@ static void smblib_notify_device_mode(struct smb_charger *chg, bool enable)
 	if (enable)
 		smblib_notify_extcon_props(chg, EXTCON_USB);
 
-	extcon_set_state_sync(chg->extcon, EXTCON_USB, enable);
+	// extcon_set_state_sync(chg->extcon, EXTCON_USB, enable);
 }
 
 static void smblib_notify_usb_host(struct smb_charger *chg, bool enable)

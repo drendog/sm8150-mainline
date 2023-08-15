@@ -4873,6 +4873,7 @@ static int smb5_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, chip);
 
 	/* extcon registration */
+	/*
 	chg->extcon = devm_extcon_dev_allocate(chg->dev, smblib_extcon_cable);
 	if (IS_ERR(chg->extcon)) {
 		rc = PTR_ERR(chg->extcon);
@@ -4887,8 +4888,10 @@ static int smb5_probe(struct platform_device *pdev)
 				rc);
 		goto cleanup;
 	}
+	*/
 
 	/* Support reporting polarity and speed via properties */
+	/*
 	rc = extcon_set_property_capability(chg->extcon,
 			EXTCON_USB, EXTCON_PROP_USB_TYPEC_POLARITY);
 	rc |= extcon_set_property_capability(chg->extcon,
@@ -4902,6 +4905,7 @@ static int smb5_probe(struct platform_device *pdev)
 			"failed to configure extcon capabilities\n");
 		goto cleanup;
 	}
+	*/
 
 	rc = smb5_init_hw(chip);
 	if (rc < 0) {
