@@ -32,6 +32,9 @@
 #endif
 
 #include "nt36xxx.h"
+#ifndef NVT_SAVE_TESTDATA_IN_FILE
+#include "nt36xxx_mp_ctrlram.h"
+#endif
 
 #if NVT_TOUCH_ESD_PROTECT
 #include <linux/jiffies.h>
