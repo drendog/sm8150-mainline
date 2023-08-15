@@ -547,7 +547,7 @@ static int32_t nvt_fw_version_open(struct inode *inode, struct file *file)
 	return seq_open(file, &nvt_fw_version_seq_ops);
 }
 
-static const struct file_operations nvt_fw_version_fops = {
+static const struct proc_ops nvt_fw_version_fops = {
 	.owner = THIS_MODULE,
 	.open = nvt_fw_version_open,
 	.read = seq_read,
