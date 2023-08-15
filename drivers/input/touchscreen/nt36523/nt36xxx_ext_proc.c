@@ -548,11 +548,10 @@ static int32_t nvt_fw_version_open(struct inode *inode, struct file *file)
 }
 
 static const struct proc_ops nvt_fw_version_fops = {
-	.owner = THIS_MODULE,
-	.open = nvt_fw_version_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
+	.proc_open = nvt_fw_version_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release,
 };
 
 /*******************************************************
@@ -603,11 +602,10 @@ static int32_t nvt_baseline_open(struct inode *inode, struct file *file)
 }
 
 static const struct proc_ops nvt_baseline_fops = {
-	.owner = THIS_MODULE,
-	.open = nvt_baseline_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
+	.proc_open = nvt_baseline_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release,
 };
 
 /*******************************************************
@@ -661,11 +659,10 @@ static int32_t nvt_raw_open(struct inode *inode, struct file *file)
 }
 
 static const struct proc_ops nvt_raw_fops = {
-	.owner = THIS_MODULE,
-	.open = nvt_raw_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
+	.proc_open = nvt_raw_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release,
 };
 
 /*******************************************************
@@ -719,11 +716,10 @@ static int32_t nvt_diff_open(struct inode *inode, struct file *file)
 }
 
 static const struct proc_ops nvt_diff_fops = {
-	.owner = THIS_MODULE,
-	.open = nvt_diff_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
+	.proc_open = nvt_diff_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release,
 };
 
 /*******************************************************
@@ -791,11 +787,10 @@ static int32_t nvt_pen_diff_open(struct inode *inode, struct file *file)
 }
 
 static const struct proc_ops nvt_pen_diff_fops = {
-	.owner = THIS_MODULE,
-	.open = nvt_pen_diff_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release,
+	.proc_open = nvt_pen_diff_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release,
 };
 
 static int nvt_xiaomi_lockdown_info_show(struct seq_file *m, void *v)
@@ -813,11 +808,10 @@ static int32_t nvt_xiaomi_lockdown_info_open(struct inode *inode, struct file *f
 }
 
 static const struct proc_ops nvt_xiaomi_lockdown_info_fops = {
-	.owner = THIS_MODULE,
-	.open = nvt_xiaomi_lockdown_info_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
+	.proc_open = nvt_xiaomi_lockdown_info_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
 };
 
 int32_t nvt_set_pocket_palm_switch(uint8_t pocket_palm_switch)
@@ -1038,9 +1032,8 @@ out:
 }
 
 static const struct proc_ops nvt_pf_switch_fops = {
-	.owner = THIS_MODULE,
-	.read = nvt_pf_switch_proc_read,
-	.write = nvt_pf_switch_proc_write,
+	.proc_read = nvt_pf_switch_proc_read,
+	.proc_write = nvt_pf_switch_proc_write,
 };
 
 /*******************************************************
@@ -1222,9 +1215,8 @@ out:
 }
 
 static const struct proc_ops nvt_sensitivity_switch_fops = {
-	.owner = THIS_MODULE,
-	.read = nvt_sensitivity_switch_proc_read,
-	.write = nvt_sensitivity_switch_proc_write,
+	.proc_read = nvt_sensitivity_switch_proc_read,
+	.proc_write = nvt_sensitivity_switch_proc_write,
 };
 
 /*******************************************************
@@ -1405,9 +1397,8 @@ out:
 }
 
 static const struct proc_ops nvt_er_range_switch_fops = {
-	.owner = THIS_MODULE,
-	.read = nvt_er_range_switch_proc_read,
-	.write = nvt_er_range_switch_proc_write,
+	.proc_read = nvt_er_range_switch_proc_read,
+	.proc_write = nvt_er_range_switch_proc_write,
 };
 
 /*******************************************************
@@ -1601,9 +1592,8 @@ out:
 }
 
 static const struct proc_ops nvt_edge_reject_switch_fops = {
-	.owner = THIS_MODULE,
-	.read = nvt_edge_reject_switch_proc_read,
-	.write = nvt_edge_reject_switch_proc_write,
+	.proc_read = nvt_edge_reject_switch_proc_read,
+	.proc_write = nvt_edge_reject_switch_proc_write,
 };
 
 /*******************************************************
@@ -1783,9 +1773,8 @@ out:
 }
 
 static const struct proc_ops nvt_hand_only_switch_fops = {
-	.owner = THIS_MODULE,
-	.read = nvt_hand_only_switch_proc_read,
-	.write = nvt_hand_only_switch_proc_write,
+	.proc_read = nvt_hand_only_switch_proc_read,
+	.proc_write = nvt_hand_only_switch_proc_write,
 };
 
 /*******************************************************
@@ -1966,9 +1955,8 @@ out:
 }
 
 static const struct proc_ops nvt_drag_latency_switch_fops = {
-	.owner = THIS_MODULE,
-	.read = nvt_drag_latency_switch_proc_read,
-	.write = nvt_drag_latency_switch_proc_write,
+	.proc_read = nvt_drag_latency_switch_proc_read,
+	.proc_write = nvt_drag_latency_switch_proc_write,
 };
 
 /*******************************************************
@@ -2150,9 +2138,8 @@ out:
 }
 
 static const struct proc_ops nvt_small_jitter_switch_fops = {
-	.owner = THIS_MODULE,
-	.read = nvt_small_jitter_switch_proc_read,
-	.write = nvt_small_jitter_switch_proc_write,
+	.proc_read = nvt_small_jitter_switch_proc_read,
+	.proc_write = nvt_small_jitter_switch_proc_write,
 };
 
 /*******************************************************
@@ -2332,9 +2319,8 @@ out:
 }
 
 static const struct proc_ops nvt_game_mode_switch_fops = {
-	.owner = THIS_MODULE,
-	.read = nvt_game_mode_switch_proc_read,
-	.write = nvt_game_mode_switch_proc_write,
+	.proc_read = nvt_game_mode_switch_proc_read,
+	.proc_write = nvt_game_mode_switch_proc_write,
 };
 
 /*******************************************************
