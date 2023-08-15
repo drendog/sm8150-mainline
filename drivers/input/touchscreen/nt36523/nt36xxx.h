@@ -19,6 +19,8 @@
 #ifndef 	_LINUX_NVT_TOUCH_H
 #define		_LINUX_NVT_TOUCH_H
 
+#define CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE 1
+
 #include <linux/delay.h>
 #include <linux/input.h>
 #include <linux/of.h>

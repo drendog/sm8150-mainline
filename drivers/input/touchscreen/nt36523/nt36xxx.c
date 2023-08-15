@@ -36,6 +36,10 @@
 #include "nt36xxx_mp_ctrlram.h"
 #endif
 
+#ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
+#include "../xiaomi/xiaomi_touch.h"
+#endif
+
 #if NVT_TOUCH_ESD_PROTECT
 #include <linux/jiffies.h>
 #endif /* #if NVT_TOUCH_ESD_PROTECT */
@@ -1764,6 +1768,10 @@ static void nvt_switch_mode_work(struct work_struct *work)
 	}
 }
 
+#ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
+static struct xiaomi_touch_interface xiaomi_touch_interfaces;
+#endif
+
 #ifdef CONFIG_TOUCHSCREEN_NVT_DEBUG_FS
 static void tpdbg_suspend(struct nvt_ts_data *ts_core, bool enable)
 {
@@ -1908,6 +1916,83 @@ static void nvt_resume_work(struct work_struct *work)
 {
 	struct nvt_ts_data *ts_core = container_of(work, struct nvt_ts_data, resume_work);
 	nvt_ts_resume(&ts_core->client->dev);
+}
+
+
+
+#define PANEL_ORIENTATION_DEGREE_0		0	/* normal portrait orientation */
+#define PANEL_ORIENTATION_DEGREE_90		1	/* anticlockwise 90 degrees */
+#define PANEL_ORIENTATION_DEGREE_180	2	/* anticlockwise 180 degrees */
+#define PANEL_ORIENTATION_DEGREE_270	3	/* anticlockwise 270 degrees */
+
+static void update_touchfeature_value_work(struct work_struct *work) {
+	uint8_t ret = 0;
+	uint8_t i = 0;
+	uint8_t nvt_game_value[2] = {0};
+	int size = 6;
+	enum MODE_TYPE mode_type[6] = {Touch_Game_Mode, Touch_UP_THRESHOLD, Touch_Tolerance, Touch_Tap_Stability,
+				Touch_Aim_Sensitivity, Touch_Edge_Filter};
+	uint8_t touchfeature_addr[6] = {0x7A, 0x71, 0x78, 0x70, 0x79, 0x72};
+	uint8_t temp_set_value;
+	uint8_t temp_get_value;
+
+	NVT_LOG("enter");
+	for (i = 0; i < size; i++) {
+		temp_get_value = xiaomi_touch_interfaces.touch_mode[mode_type[i]][GET_CUR_VALUE];
+		temp_set_value = xiaomi_touch_interfaces.touch_mode[mode_type[i]][SET_CUR_VALUE];
+		if (temp_get_value == temp_set_value)
+			continue;
+		nvt_game_value[0] = touchfeature_addr[i];
+		nvt_game_value[1] = temp_set_value;
+		ret = nvt_touchfeature_set(nvt_game_value);
+		msleep(40);
+		if (ret < 0) {
+			NVT_ERR("change game mode fail, mode is %d", mode_type[i]);
+			return;
+		}
+		xiaomi_touch_interfaces.touch_mode[mode_type[i]][GET_CUR_VALUE] = temp_set_value;
+		NVT_LOG("set mode:%d = %d", mode_type[i], temp_set_value);
+	}
+	/* orientation set */
+	temp_get_value = xiaomi_touch_interfaces.touch_mode[Touch_Panel_Orientation][GET_CUR_VALUE];
+	temp_set_value = xiaomi_touch_interfaces.touch_mode[Touch_Panel_Orientation][SET_CUR_VALUE];
+	if (temp_get_value != temp_set_value) {
+		if (temp_set_value == PANEL_ORIENTATION_DEGREE_0 || temp_set_value == PANEL_ORIENTATION_DEGREE_180) {
+			nvt_game_value[0] = 0xBA;
+		} else if (temp_set_value == PANEL_ORIENTATION_DEGREE_90) {
+			nvt_game_value[0] = 0xBC;
+		} else if (temp_set_value == PANEL_ORIENTATION_DEGREE_270) {
+			nvt_game_value[0] = 0xBB;
+		}
+		nvt_game_value[1] = 0;
+		ret = nvt_touchfeature_set(nvt_game_value);
+		if (ret < 0) {
+			NVT_ERR("change panel orientation mode fail");
+			return;
+		}
+		xiaomi_touch_interfaces.touch_mode[Touch_Panel_Orientation][GET_CUR_VALUE] = temp_set_value;
+		NVT_LOG("set mode:%d = %d", Touch_Panel_Orientation, temp_set_value);
+	}
+
+	/* RF set */
+	temp_get_value = xiaomi_touch_interfaces.touch_mode[Touch_Resist_RF][GET_CUR_VALUE];
+	temp_set_value = xiaomi_touch_interfaces.touch_mode[Touch_Resist_RF][SET_CUR_VALUE];
+	if (temp_get_value != temp_set_value) {
+		if (temp_set_value == 0) {
+			nvt_game_value[0] = 0x76;
+		} else if (temp_set_value == 1) {
+			nvt_game_value[0] = 0x75;
+		}
+		nvt_game_value[1] = 0;
+		ret = nvt_touchfeature_set(nvt_game_value);
+		if (ret < 0) {
+			NVT_ERR("change panel RF mode fail");
+			return;
+		}
+		xiaomi_touch_interfaces.touch_mode[Touch_Resist_RF][GET_CUR_VALUE] = temp_set_value;
+		NVT_LOG("set mode:%d = %d", Touch_Resist_RF, temp_set_value);
+	}
+	NVT_LOG("exit");
 }
 
 /*******************************************************
@@ -2367,6 +2452,10 @@ err_alloc_work_thread_failed:
 	nvt_mp_proc_deinit();
 err_mp_proc_init_failed:
 #endif
+err_register_pen_charge_state_failed:
+	destroy_workqueue(ts->set_touchfeature_wq);
+err_create_set_touchfeature_work_queue:
+	destroy_workqueue(ts->event_wq);
 #if NVT_TOUCH_EXT_PROC
 	nvt_extra_proc_deinit();
 err_extra_proc_init_failed:
