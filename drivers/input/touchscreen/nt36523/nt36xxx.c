@@ -1970,6 +1970,12 @@ nvt_set_pen_enable_out:
 	return ret;
 }
 
+static int nvt_pen_charge_state_notifier_callback(struct notifier_block *self, unsigned long event, void *data) {
+	ts->pen_is_charge = !!event;
+	release_pen_event();
+	schedule_work(&ts->pen_charge_state_change_work);
+	return 0;
+}
 
 static void nvt_pen_charge_state_change_work(struct work_struct *work)
 {
@@ -2307,6 +2313,21 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	}
 	INIT_WORK(&ts->resume_work, nvt_resume_work);
 	INIT_WORK(&ts->suspend_work, nvt_suspend_work);
+
+	ts->set_touchfeature_wq = create_singlethread_workqueue("nvt-set-touchfeature-queue");
+	if (!ts->set_touchfeature_wq) {
+		NVT_ERR("create set touch feature workqueue fail");
+		ret = -ENOMEM;
+		goto err_create_set_touchfeature_work_queue;
+	}
+	INIT_WORK(&ts->set_touchfeature_work, update_touchfeature_value_work);
+
+	ts->pen_charge_state_notifier.notifier_call = nvt_pen_charge_state_notifier_callback;
+	ret = pen_charge_state_notifier_register_client(&ts->pen_charge_state_notifier);
+	if(ret) {
+		NVT_ERR("register pen charge state change notifier failed. ret=%d\n", ret);
+		goto err_register_pen_charge_state_failed;
+	}
 
 #ifdef CONFIG_DRM
 	ts->drm_notif.notifier_call = nvt_drm_notifier_callback;
