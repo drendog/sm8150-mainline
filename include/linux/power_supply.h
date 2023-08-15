@@ -555,10 +555,6 @@ enum power_supply_typec_power_role {
 	POWER_SUPPLY_TYPEC_PR_SOURCE,
 };
 
-enum power_supply_notifier_events {
-	PSY_EVENT_PROP_CHANGED,
-};
-
 
 enum power_supply_usb_type {
 	POWER_SUPPLY_USB_TYPE_UNKNOWN = 0,
