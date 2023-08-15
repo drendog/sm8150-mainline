@@ -10886,7 +10886,7 @@ int smblib_init(struct smb_charger *chg)
 	}
 	INIT_DELAYED_WORK(&chg->pr_lock_clear_work,
 					smblib_pr_lock_clear_work);
-	setup_timer(&chg->apsd_timer, apsd_timer_cb, (unsigned long)chg);
+	// setup_timer(&chg->apsd_timer, apsd_timer_cb, (unsigned long)chg);
 
 	INIT_DELAYED_WORK(&chg->report_soc_decimal_work, smblib_report_soc_decimal_work);
 	INIT_DELAYED_WORK(&chg->check_init_boot, smb_check_init_boot);
