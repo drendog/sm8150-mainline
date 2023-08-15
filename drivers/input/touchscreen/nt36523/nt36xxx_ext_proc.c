@@ -602,7 +602,7 @@ static int32_t nvt_baseline_open(struct inode *inode, struct file *file)
 	return seq_open(file, &nvt_seq_ops);
 }
 
-static const struct file_operations nvt_baseline_fops = {
+static const struct proc_ops nvt_baseline_fops = {
 	.owner = THIS_MODULE,
 	.open = nvt_baseline_open,
 	.read = seq_read,
@@ -660,7 +660,7 @@ static int32_t nvt_raw_open(struct inode *inode, struct file *file)
 	return seq_open(file, &nvt_seq_ops);
 }
 
-static const struct file_operations nvt_raw_fops = {
+static const struct proc_ops nvt_raw_fops = {
 	.owner = THIS_MODULE,
 	.open = nvt_raw_open,
 	.read = seq_read,
@@ -718,7 +718,7 @@ static int32_t nvt_diff_open(struct inode *inode, struct file *file)
 	return seq_open(file, &nvt_seq_ops);
 }
 
-static const struct file_operations nvt_diff_fops = {
+static const struct proc_ops nvt_diff_fops = {
 	.owner = THIS_MODULE,
 	.open = nvt_diff_open,
 	.read = seq_read,
@@ -790,7 +790,7 @@ static int32_t nvt_pen_diff_open(struct inode *inode, struct file *file)
 	return seq_open(file, &nvt_pen_diff_seq_ops);
 }
 
-static const struct file_operations nvt_pen_diff_fops = {
+static const struct proc_ops nvt_pen_diff_fops = {
 	.owner = THIS_MODULE,
 	.open = nvt_pen_diff_open,
 	.read = seq_read,
@@ -812,7 +812,7 @@ static int32_t nvt_xiaomi_lockdown_info_open(struct inode *inode, struct file *f
 	return single_open(file, nvt_xiaomi_lockdown_info_show, NULL);
 }
 
-static const struct file_operations nvt_xiaomi_lockdown_info_fops = {
+static const struct proc_ops nvt_xiaomi_lockdown_info_fops = {
 	.owner = THIS_MODULE,
 	.open = nvt_xiaomi_lockdown_info_open,
 	.read = seq_read,
@@ -1037,7 +1037,7 @@ out:
 	return ret;
 }
 
-static const struct file_operations nvt_pf_switch_fops = {
+static const struct proc_ops nvt_pf_switch_fops = {
 	.owner = THIS_MODULE,
 	.read = nvt_pf_switch_proc_read,
 	.write = nvt_pf_switch_proc_write,
@@ -1221,7 +1221,7 @@ out:
 	return ret;
 }
 
-static const struct file_operations nvt_sensitivity_switch_fops = {
+static const struct proc_ops nvt_sensitivity_switch_fops = {
 	.owner = THIS_MODULE,
 	.read = nvt_sensitivity_switch_proc_read,
 	.write = nvt_sensitivity_switch_proc_write,
@@ -1404,7 +1404,7 @@ out:
 	return ret;
 }
 
-static const struct file_operations nvt_er_range_switch_fops = {
+static const struct proc_ops nvt_er_range_switch_fops = {
 	.owner = THIS_MODULE,
 	.read = nvt_er_range_switch_proc_read,
 	.write = nvt_er_range_switch_proc_write,
@@ -1600,7 +1600,7 @@ out:
 	return ret;
 }
 
-static const struct file_operations nvt_edge_reject_switch_fops = {
+static const struct proc_ops nvt_edge_reject_switch_fops = {
 	.owner = THIS_MODULE,
 	.read = nvt_edge_reject_switch_proc_read,
 	.write = nvt_edge_reject_switch_proc_write,
@@ -1782,7 +1782,7 @@ out:
 	return ret;
 }
 
-static const struct file_operations nvt_hand_only_switch_fops = {
+static const struct proc_ops nvt_hand_only_switch_fops = {
 	.owner = THIS_MODULE,
 	.read = nvt_hand_only_switch_proc_read,
 	.write = nvt_hand_only_switch_proc_write,
@@ -1965,7 +1965,7 @@ out:
 	return ret;
 }
 
-static const struct file_operations nvt_drag_latency_switch_fops = {
+static const struct proc_ops nvt_drag_latency_switch_fops = {
 	.owner = THIS_MODULE,
 	.read = nvt_drag_latency_switch_proc_read,
 	.write = nvt_drag_latency_switch_proc_write,
@@ -2149,7 +2149,7 @@ out:
 	return ret;
 }
 
-static const struct file_operations nvt_small_jitter_switch_fops = {
+static const struct proc_ops nvt_small_jitter_switch_fops = {
 	.owner = THIS_MODULE,
 	.read = nvt_small_jitter_switch_proc_read,
 	.write = nvt_small_jitter_switch_proc_write,
@@ -2331,7 +2331,7 @@ out:
 	return ret;
 }
 
-static const struct file_operations nvt_game_mode_switch_fops = {
+static const struct proc_ops nvt_game_mode_switch_fops = {
 	.owner = THIS_MODULE,
 	.read = nvt_game_mode_switch_proc_read,
 	.write = nvt_game_mode_switch_proc_write,
