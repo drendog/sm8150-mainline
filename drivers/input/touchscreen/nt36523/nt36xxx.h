@@ -33,6 +33,7 @@
 #define NVTTOUCH_RST_PIN 980
 #define NVTTOUCH_INT_PIN 943
 
+#define NVT_LOCKDOWN_SIZE 8
 #define PINCTRL_STATE_ACTIVE		"pmx_ts_active"
 #define PINCTRL_STATE_SUSPEND		"pmx_ts_suspend"
 
