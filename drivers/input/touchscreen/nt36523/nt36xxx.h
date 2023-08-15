@@ -124,19 +124,28 @@ struct nvt_ts_data {
 	struct spi_device *client;
 	struct input_dev *input_dev;
 	struct delayed_work nvt_fwu_work;
+	struct delayed_work nvt_lockdown_work;
 	struct work_struct switch_mode_work;
 	struct work_struct pen_charge_state_change_work;
 	bool pen_is_charge;
 	struct notifier_block pen_charge_state_notifier;
 	uint16_t addr;
 	int8_t phys[32];
+#if defined(CONFIG_FB)
 #ifdef CONFIG_DRM
 	struct notifier_block drm_notif;
+#else
+	struct notifier_block fb_notif;
+#endif
+#elif defined(CONFIG_HAS_EARLYSUSPEND)
+	struct early_suspend early_suspend;
 #endif
 	uint32_t config_array_size;
 	struct nvt_config_info *config_array;
 	const u8 *fw_name;
 	const u8 *mp_name;
+	bool lkdown_readed;
+	u8 lockdown_info[NVT_LOCKDOWN_SIZE];
 	uint8_t fw_ver;
 	uint8_t x_num;
 	uint8_t y_num;
@@ -146,6 +155,11 @@ struct nvt_ts_data {
 	uint8_t max_touch_num;
 	uint8_t max_button_num;
 	uint32_t int_trigger_type;
+#ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
+	u32 gamemode_config[3][5];
+	struct workqueue_struct *set_touchfeature_wq;
+	struct work_struct set_touchfeature_work;
+#endif
 	int32_t irq_gpio;
 	uint32_t irq_flags;
 	int32_t reset_gpio;
@@ -175,7 +189,12 @@ struct nvt_ts_data {
 	int panel_index;
 	uint32_t spi_max_freq;
 	int db_wakeup;
-
+#ifdef CONFIG_MTK_SPI
+	struct mt_chip_conf spi_ctrl;
+#endif
+#ifdef CONFIG_SPI_MT65XX
+    struct mtk_chip_config spi_ctrl;
+#endif
 #ifdef CONFIG_TOUCHSCREEN_NVT_DEBUG_FS
 		struct dentry *debugfs;
 #endif
@@ -188,6 +207,9 @@ struct nvt_ts_data {
 	struct pinctrl *ts_pinctrl;
 	struct pinctrl_state *pinctrl_state_active;
 	struct pinctrl_state *pinctrl_state_suspend;
+#ifndef NVT_SAVE_TESTDATA_IN_FILE
+	void *testdata;
+#endif
 };
 
 #if NVT_TOUCH_PROC
