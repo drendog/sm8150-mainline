@@ -524,6 +524,42 @@ enum power_supply_type {
 #endif
 };
 
+/* Indicates USB Type-C CC connection status */
+enum power_supply_typec_mode {
+	POWER_SUPPLY_TYPEC_NONE,
+
+	/* Acting as source */
+	POWER_SUPPLY_TYPEC_SINK,		/* Rd only */
+	POWER_SUPPLY_TYPEC_SINK_POWERED_CABLE,	/* Rd/Ra */
+	POWER_SUPPLY_TYPEC_SINK_DEBUG_ACCESSORY,/* Rd/Rd */
+	POWER_SUPPLY_TYPEC_SINK_AUDIO_ADAPTER,	/* Ra/Ra */
+	POWER_SUPPLY_TYPEC_POWERED_CABLE_ONLY,	/* Ra only */
+
+	/* Acting as sink */
+	POWER_SUPPLY_TYPEC_SOURCE_DEFAULT,	/* Rp default */
+	POWER_SUPPLY_TYPEC_SOURCE_MEDIUM,	/* Rp 1.5A */
+	POWER_SUPPLY_TYPEC_SOURCE_HIGH,		/* Rp 3A */
+	POWER_SUPPLY_TYPEC_NON_COMPLIANT,
+};
+
+enum power_supply_typec_src_rp {
+	POWER_SUPPLY_TYPEC_SRC_RP_STD,
+	POWER_SUPPLY_TYPEC_SRC_RP_1P5A,
+	POWER_SUPPLY_TYPEC_SRC_RP_3A
+};
+
+enum power_supply_typec_power_role {
+	POWER_SUPPLY_TYPEC_PR_NONE,		/* CC lines in high-Z */
+	POWER_SUPPLY_TYPEC_PR_DUAL,
+	POWER_SUPPLY_TYPEC_PR_SINK,
+	POWER_SUPPLY_TYPEC_PR_SOURCE,
+};
+
+enum power_supply_notifier_events {
+	PSY_EVENT_PROP_CHANGED,
+};
+
+
 enum power_supply_usb_type {
 	POWER_SUPPLY_USB_TYPE_UNKNOWN = 0,
 	POWER_SUPPLY_USB_TYPE_SDP,		/* Standard Downstream Port */
