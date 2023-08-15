@@ -72,6 +72,9 @@ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long 
 static int32_t nvt_ts_suspend(struct device *dev);
 static int32_t nvt_ts_resume(struct device *dev);
 
+extern int pen_charge_state_notifier_register_client(struct notifier_block *nb);
+extern int pen_charge_state_notifier_unregister_client(struct notifier_block *nb);
+
 uint32_t ENG_RST_ADDR  = 0x7FFF80;
 uint32_t SWRST_N8_ADDR = 0; //read from dtsi
 uint32_t SPI_RD_FAST_ADDR = 0;	//read from dtsi
