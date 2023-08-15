@@ -898,3 +898,5 @@ config BATTERY_UG3105
 	  limited to reporting capacity only.
 
 endif # POWER_SUPPLY
+
+source "drivers/power/supply/qcom/Kconfig"
