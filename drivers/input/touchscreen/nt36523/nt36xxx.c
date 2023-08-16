@@ -2460,12 +2460,11 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	INIT_WORK(&ts->set_touchfeature_work, update_touchfeature_value_work);
 
 	ts->pen_charge_state_notifier.notifier_call = nvt_pen_charge_state_notifier_callback;
-	  /*ret = pen_charge_state_notifier_register_client(&ts->pen_charge_state_notifier);
+	ret = pen_charge_state_notifier_register_client(&ts->pen_charge_state_notifier);
 	if(ret) {
 		NVT_ERR("register pen charge state change notifier failed. ret=%d\n", ret);
 		goto err_register_pen_charge_state_failed;
 	}
-*/
 
 #ifdef CONFIG_DRM
 	ts->drm_notif.notifier_call = nvt_drm_notifier_callback;
