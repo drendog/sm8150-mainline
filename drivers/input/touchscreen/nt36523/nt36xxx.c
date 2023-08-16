@@ -77,8 +77,6 @@ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long 
 static int32_t nvt_ts_suspend(struct device *dev);
 static int32_t nvt_ts_resume(struct device *dev);
 
-extern int dsi_panel_lockdown_info_read(unsigned char *plockdowninfo);
-
 extern int pen_charge_state_notifier_register_client(struct notifier_block *nb);
 extern int pen_charge_state_notifier_unregister_client(struct notifier_block *nb);
 
@@ -2182,52 +2180,10 @@ static char nvt_touch_vendor_read(void)
 	return value;
 }
 
-static u8 nvt_panel_vendor_read(void)
-{
-	char value = '0';
-	int ret = 0;
-	if (!ts)
-		return value;
-	ret = dsi_panel_lockdown_info_read(ts->lockdown_info);
-	if (ret <= 0) {
-		NVT_ERR("can't get lockdown info");
-		return value;
-	}
-	if (!ts->lockdown_info[6]) {
-		NVT_ERR("%s lockdown info is NULL\n", __func__);
-		return value;
-	} else {
-		value = ts->lockdown_info[1];
-		NVT_LOG("%s Get touch vendor: %d\n", __func__, value);
-	}
-	return value;
-}
-
 static u8 nvt_panel_color_read(void)
 {
 	char value = '2';
 
-	return value;
-}
-
-static u8 nvt_panel_display_read(void)
-{
-	char value = '0';
-	int ret = 0;
-	if (!ts)
-		return value;
-	ret = dsi_panel_lockdown_info_read(ts->lockdown_info);
-	if (ret <= 0) {
-		NVT_ERR("can't get lockdown info");
-		return value;
-	}
-	if (!ts->lockdown_info[1]) {
-		NVT_ERR("%s lockdown info is NULL\n", __func__);
-		return value;
-	} else {
-		value = ts->lockdown_info[1];
-		NVT_LOG("%s Get touch vendor: %d\n", __func__, value);
-	}
 	return value;
 }
 
