@@ -511,10 +511,10 @@ DEFINE_DEBUGFS_ATTRIBUTE(fops_u32_wo, NULL, debugfs_u32_set, "%llu\n");
  * contains the value of the variable @value.  If the @mode variable is so
  * set, it can be read from, and written to.
  */
-void debugfs_create_u32(const char *name, umode_t mode, struct dentry *parent,
+struct dentry *debugfs_create_u32(const char *name, umode_t mode, struct dentry *parent,
 			u32 *value)
 {
-	debugfs_create_mode_unsafe(name, mode, parent, value, &fops_u32,
+	return debugfs_create_mode_unsafe(name, mode, parent, value, &fops_u32,
 				   &fops_u32_ro, &fops_u32_wo);
 }
 EXPORT_SYMBOL_GPL(debugfs_create_u32);
