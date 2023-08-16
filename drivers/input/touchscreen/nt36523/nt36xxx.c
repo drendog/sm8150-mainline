@@ -2724,8 +2724,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 #ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
 				xiaomi_touch_interfaces.touch_vendor_read = nvt_touch_vendor_read;
-				xiaomi_touch_interfaces.panel_display_read = nvt_panel_display_read;
-				xiaomi_touch_interfaces.panel_vendor_read = nvt_panel_vendor_read;
 				xiaomi_touch_interfaces.panel_color_read = nvt_panel_color_read;
 				xiaomi_touch_interfaces.getModeValue = nvt_get_mode_value;
 				xiaomi_touch_interfaces.setModeValue = nvt_set_cur_value;
