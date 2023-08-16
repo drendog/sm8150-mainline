@@ -108,7 +108,7 @@ void debugfs_create_u8(const char *name, umode_t mode, struct dentry *parent,
 		       u8 *value);
 void debugfs_create_u16(const char *name, umode_t mode, struct dentry *parent,
 			u16 *value);
-void debugfs_create_u32(const char *name, umode_t mode, struct dentry *parent,
+struct dentry *debugfs_create_u32(const char *name, umode_t mode, struct dentry *parent,
 			u32 *value);
 void debugfs_create_u64(const char *name, umode_t mode, struct dentry *parent,
 			u64 *value);
