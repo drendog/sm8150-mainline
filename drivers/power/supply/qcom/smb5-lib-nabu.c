@@ -390,7 +390,7 @@ static void smblib_notify_usb_host(struct smb_charger *chg, bool enable)
 		}
 	}
 
-	extcon_set_state_sync(chg->extcon, EXTCON_USB_HOST, enable);
+	// extcon_set_state_sync(chg->extcon, EXTCON_USB_HOST, enable);
 }
 
 /********************
