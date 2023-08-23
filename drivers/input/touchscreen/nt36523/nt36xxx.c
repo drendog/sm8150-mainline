@@ -2082,7 +2082,7 @@ static int disable_pen_input_device(bool disable) {
 	}
 
 	msleep(35);
-	disable = (!(ts->pen_input_dev_enable) || ts->pen_is_charge) ? true : disable;
+	// disable = (!(ts->pen_input_dev_enable) || ts->pen_is_charge) ? true : disable;
 
 	NVT_LOG("ts->pen_input_dev_enable: %s, ts->pen_is_charge: %s, disable: %s",
 					ts->pen_input_dev_enable, ts->pen_is_charge, disable);
