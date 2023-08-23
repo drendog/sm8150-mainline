@@ -1426,7 +1426,7 @@ return:
 *******************************************************/
 static irqreturn_t nvt_ts_work_func(int irq, void *data)
 {
-	NVT_LOG("nvt_ts_work_func start irq=%d\n", irq);
+	// NVT_LOG("nvt_ts_work_func start irq=%d\n", irq);
 	int32_t ret = -1;
 	uint8_t point_data[POINT_DATA_LEN + PEN_DATA_LEN + 1 + DUMMY_BYTES] = {0};
 	uint32_t position = 0;
@@ -2786,11 +2786,13 @@ err_create_nvt_fwu_wq_failed:
 #endif
 	free_irq(client->irq, ts);
 err_int_request_failed:
+	NVT_LOG("err_int_request_failed");
 	if (ts->pen_support) {
 		input_unregister_device(ts->pen_input_dev);
 		ts->pen_input_dev = NULL;
 	}
 err_pen_input_register_device_failed:
+	NVT_LOG("err_pen_input_register_device_failed");
 	if (ts->pen_support) {
 		if (ts->pen_input_dev) {
 			input_free_device(ts->pen_input_dev);
@@ -2798,9 +2800,11 @@ err_pen_input_register_device_failed:
 		}
 	}
 err_pen_input_dev_alloc_failed:
+	NVT_LOG("err_pen_input_dev_alloc_failed");
 	input_unregister_device(ts->input_dev);
 	ts->input_dev = NULL;
 err_input_register_device_failed:
+	NVT_LOG("err_pen_input_dev_alloc_failed");
 	if (ts->input_dev) {
 		input_free_device(ts->input_dev);
 		ts->input_dev = NULL;
@@ -2994,6 +2998,7 @@ static int32_t nvt_ts_suspend(struct device *dev)
 
 	if (ts->pen_input_dev_enable) {
 		NVT_LOG("if enable pen,will close it");
+		disable_pen_input_device(true);
 	}
 
 	if (ts->db_wakeup) {
@@ -3136,6 +3141,9 @@ static int32_t nvt_ts_resume(struct device *dev)
 	bTouchIsAwake = 1;
 
 	mutex_unlock(&ts->lock);
+
+	disable_pen_input_device(false);
+	// dsi_panel_doubleclick_enable(!!ts->db_wakeup);/*if true, dbclick work until next suspend*/
 
 	if (likely(ts->ic_state == NVT_IC_RESUME_IN)) {
 		ts->ic_state = NVT_IC_RESUME_OUT;
