@@ -2084,6 +2084,9 @@ static int disable_pen_input_device(bool disable) {
 	msleep(35);
 	disable = (!(ts->pen_input_dev_enable) || ts->pen_is_charge) ? true : disable;
 
+	NVT_LOG("ts->pen_input_dev_enable: %s, ts->pen_is_charge: %s, disable: %s",
+					ts->pen_input_dev_enable, ts->pen_is_charge, disable);
+
 	//---set xdata index to EVENT BUF ADDR---
 	ret = nvt_set_page(ts->mmap->EVENT_BUF_ADDR | EVENT_MAP_HOST_CMD);
 	if (ret < 0) {
@@ -2109,6 +2112,7 @@ nvt_set_pen_enable_out:
 }
 
 static int nvt_pen_charge_state_notifier_callback(struct notifier_block *self, unsigned long event, void *data) {
+	NVT_LOG("nvt_pen_charge_state_notifier_callback, event: %s", !!event);
 	ts->pen_is_charge = !!event;
 	release_pen_event();
 	schedule_work(&ts->pen_charge_state_change_work);
