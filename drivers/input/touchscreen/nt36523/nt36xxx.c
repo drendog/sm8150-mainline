@@ -2622,7 +2622,9 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	NVT_LOG("Init Pen probe succeed\n");	
 
 	INIT_WORK(&ts->switch_mode_work, nvt_switch_mode_work);
+	nvt_switch_mode_work(&ts->switch_mode_work);
 	INIT_WORK(&ts->pen_charge_state_change_work, nvt_pen_charge_state_change_work);
+	nvt_pen_charge_state_change_work(&ts->pen_charge_state_change_work);
 	ts->pen_is_charge = false;
 
 	pm_stay_awake(&client->dev);
