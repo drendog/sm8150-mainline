@@ -2152,6 +2152,12 @@ static int nvt_set_cur_value(int nvt_mode, int nvt_value)
 		return 0;
 	}
 
+		ts->pen_input_dev_enable = !!nvt_value;
+		NVT_LOG("%s pen input dev", ts->pen_input_dev_enable ? "ENABLE" : "DISABLE");
+		disable_pen_input_device(!ts->pen_input_dev_enable);
+		release_pen_event();
+		return 0;
+
 	if (nvt_value > xiaomi_touch_interfaces.touch_mode[nvt_mode][GET_MAX_VALUE]) {
 		nvt_value = xiaomi_touch_interfaces.touch_mode[nvt_mode][GET_MAX_VALUE];
 	} else if (nvt_value < xiaomi_touch_interfaces.touch_mode[nvt_mode][GET_MIN_VALUE]) {
