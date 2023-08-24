@@ -122,6 +122,8 @@ return:
 *******************************************************/
 static void nvt_irq_enable(bool enable)
 {
+	struct irq_desc *desc;
+
 	if (enable) {
 		if (!ts->irq_enabled) {
 			enable_irq(ts->client->irq);
@@ -133,6 +135,9 @@ static void nvt_irq_enable(bool enable)
 			ts->irq_enabled = false;
 		}
 	}
+
+	desc = irq_to_desc(ts->client->irq);
+	NVT_LOG("enable=%d, desc->depth=%d\n", enable, desc->depth);
 }
 
 /*******************************************************
@@ -1273,6 +1278,10 @@ static void nvt_esd_check_func(struct work_struct *work)
 		} else {
 			nvt_update_firmware(ts->fw_name);
 		}
+		// little trolling x2
+		NVT_LOG(" Something happened, let's set the pen to enabled");
+		disable_pen_input_device(false);
+
 		mutex_unlock(&ts->lock);
 		/* update interrupt timer */
 		irq_timer = jiffies;
@@ -1500,6 +1509,10 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 		} else {
 			nvt_update_firmware(ts->fw_name);
 		}
+		// little trolling x2
+		NVT_LOG(" Something happened, let's set the pen to enabled");
+		disable_pen_input_device(false);
+
 		goto XFER_ERROR;
 	}
 #endif /* #if NVT_TOUCH_WDT_RECOVERY */
@@ -3146,7 +3159,6 @@ static int32_t nvt_ts_resume(struct device *dev)
 	if (!ts->db_wakeup && !ts->irq_enabled) {
 		nvt_irq_enable(true);
 	}
-
 #if NVT_TOUCH_ESD_PROTECT
 	nvt_esd_check_enable(false);
 	queue_delayed_work(nvt_esd_check_wq, &nvt_esd_check_work,

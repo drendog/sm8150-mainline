@@ -990,7 +990,9 @@ int32_t nvt_update_firmware(const char *firmware_name)
 
 	// request bin file in "/etc/firmware"
 	ret = update_firmware_request(firmware_name);
+	NVT_LOG("fw name: %s", firmware_name);
 	if (ret) {
+		
 		NVT_ERR("update_firmware_request failed. (%d)\n", ret);
 		goto request_firmware_fail;
 	}
