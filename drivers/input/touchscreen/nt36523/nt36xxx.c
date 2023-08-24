@@ -77,6 +77,8 @@ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long 
 static int32_t nvt_ts_suspend(struct device *dev);
 static int32_t nvt_ts_resume(struct device *dev);
 
+static int disable_pen_input_device(bool _disable);
+
 extern int pen_charge_state_notifier_register_client(struct notifier_block *nb);
 extern int pen_charge_state_notifier_unregister_client(struct notifier_block *nb);
 
