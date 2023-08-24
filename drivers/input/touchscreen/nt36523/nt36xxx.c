@@ -68,6 +68,14 @@ struct nvt_ts_data *ts;
 #if BOOT_UPDATE_FIRMWARE
 static struct workqueue_struct *nvt_fwu_wq;
 extern void Boot_Update_Firmware(struct work_struct *work);
+
+static int disable_pen_input_device(bool _disable);
+// torvals plz excuse me
+void Boot_Update_Firmware_uwu(struct work_struct *work){
+	Boot_Update_Firmware(work);
+	disable_pen_input_device(false);
+};
+
 #endif
 
 #ifdef CONFIG_DRM
@@ -77,7 +85,6 @@ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long 
 static int32_t nvt_ts_suspend(struct device *dev);
 static int32_t nvt_ts_resume(struct device *dev);
 
-static int disable_pen_input_device(bool _disable);
 
 extern int pen_charge_state_notifier_register_client(struct notifier_block *nb);
 extern int pen_charge_state_notifier_unregister_client(struct notifier_block *nb);
@@ -1160,12 +1167,77 @@ static int32_t nvt_parse_dt(struct device *dev)
 }
 #endif
 
+
+bool is_lockdown_empty(u8 *lockdown)
+{
+	NVT_LOG("is_lockdown_empty, lockdown: %d", lockdown);
+	bool ret = true;
+	int i;
+
+	for (i = 0; i < NVT_LOCKDOWN_SIZE; i++) {
+		if (lockdown[i] != 0) {
+			ret = false;
+			break;
+		}
+	}
+	return ret;
+}
+
+static int nvt_get_panel_type(struct nvt_ts_data *ts_data)
+{
+	NVT_LOG("nvt_get_panel_type");
+	int i;
+	int j;
+	u8 *lockdown = ts_data->lockdown_info;
+	struct nvt_config_info *panel_list = ts->config_array;
+
+	for (j = 0; j < 60; j++) {
+		if (lockdown[1] == 0x42) {
+			i = 0;
+			NVT_ERR("This is CSOT Display Panel!");
+			break;
+		}
+		if (lockdown[1] == 0x36) {
+			i = 1;
+			NVT_ERR("This is TM Display Panel!");
+			break;
+		}
+
+		mdelay(1000);
+	}
+	if (i != 0 && i != 1){
+		i = 1;
+	}
+
+	ts->panel_index = i;
+
+	if (i >= ts->config_array_size) {
+		NVT_ERR("mismatch panel type, use default fw");
+		ts->panel_index = -EINVAL;
+		return ts->panel_index;
+	}
+
+	NVT_LOG("match panle type, fw is [%s], mp is [%s]",
+		panel_list[i].nvt_fw_name, panel_list[i].nvt_mp_name);
+
+	return ts->panel_index;
+}
+
+
 void nvt_match_fw(void)
 {
 	NVT_LOG("start match fw name");
-	ts->fw_name = DEFAULT_BOOT_UPDATE_FIRMWARE_NAME;
-	ts->mp_name = DEFAULT_MP_UPDATE_FIRMWARE_NAME;
+	if (is_lockdown_empty(ts->lockdown_info))
+		flush_delayed_work(&ts->nvt_lockdown_work);
+	if (nvt_get_panel_type(ts) < 0) {
+		ts->fw_name = DEFAULT_BOOT_UPDATE_FIRMWARE_NAME;
+		ts->mp_name = DEFAULT_MP_UPDATE_FIRMWARE_NAME;
+	} else {
+		ts->fw_name = ts->config_array[ts->panel_index].nvt_fw_name;
+		ts->mp_name = ts->config_array[ts->panel_index].nvt_mp_name;
+	}
 }
+
 
 /*******************************************************
 Description:
@@ -2667,8 +2739,11 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		ret = -ENOMEM;
 		goto err_create_nvt_fwu_wq_failed;
 	}
-	INIT_DELAYED_WORK(&ts->nvt_fwu_work, Boot_Update_Firmware);
+	INIT_DELAYED_WORK(&ts->nvt_fwu_work, Boot_Update_Firmware_uwu);
 	// please make sure boot update start after display reset(RESX) sequence
+	// TROIA DI MERDA L'ho trovata
+	// e' proprio lei, HAHAHHAHAHHAA
+	//no ok praticamente lui updata qui il fw
 	queue_delayed_work(nvt_fwu_wq, &ts->nvt_fwu_work, msecs_to_jiffies(1000));
 #endif
 
