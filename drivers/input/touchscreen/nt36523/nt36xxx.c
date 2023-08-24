@@ -2071,9 +2071,11 @@ void nvt_enable_doubleclick(void)
 	}
 }
 
-static int disable_pen_input_device(bool disable) {
+static int disable_pen_input_device(bool _disable) {
 	uint8_t buf[8] = {0};
 	int32_t ret = 0;
+	// little trolling
+	bool disable = false; 
 
 	NVT_LOG("++\n");
 	if (!bTouchIsAwake || !ts) {
@@ -2082,7 +2084,8 @@ static int disable_pen_input_device(bool disable) {
 	}
 
 	msleep(35);
-	// disable = (!(ts->pen_input_dev_enable) || ts->pen_is_charge) ? true : disable;
+	//disable = (!(ts->pen_input_dev_enable) || ts->pen_is_charge) ? true : disable;
+	// we do a little trolling
 
 	NVT_LOG("ts->pen_input_dev_enable: %s, ts->pen_is_charge: %s, disable: %s",
 					ts->pen_input_dev_enable, ts->pen_is_charge, disable);
