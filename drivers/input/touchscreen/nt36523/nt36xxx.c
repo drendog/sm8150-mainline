@@ -66,6 +66,7 @@ extern void nvt_mp_proc_deinit(void);
 struct nvt_ts_data *ts;
 
 #if BOOT_UPDATE_FIRMWARE
+static struct workqueue_struct *nvt_lockdown_wq;
 static struct workqueue_struct *nvt_fwu_wq;
 extern void Boot_Update_Firmware(struct work_struct *work);
 
@@ -1545,9 +1546,9 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	mutex_lock(&ts->lock);
 
 	if (ts->dev_pm_suspend) {
-		NVT_LOG("ts->dev_pm_suspend, ts->dev_pm_suspend_completion = %d", ts->dev_pm_suspend_completion)
+		NVT_LOG("ts->dev_pm_suspend, ts->dev_pm_suspend_completion = %d", ts->dev_pm_suspend_completion);
 		ret = wait_for_completion_timeout(&ts->dev_pm_suspend_completion, msecs_to_jiffies(500));
-		NVT_LOG("wait_for_completion_timeout ret = %d", ret)
+		NVT_LOG("wait_for_completion_timeout ret = %d", ret);
 		if (!ret) {
 			NVT_ERR("system(spi) can't finished resuming procedure, skip it\n");
 			goto XFER_ERROR;
