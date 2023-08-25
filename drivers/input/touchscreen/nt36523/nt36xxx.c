@@ -2958,7 +2958,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 #if defined(CONFIG_FB)
 #ifdef CONFIG_DRM
 	ts->drm_notif.notifier_call = nvt_drm_notifier_callback;
-	ret = drm_register_client(&ts->drm_notif);
+	ret = mi_drm_register_client(&ts->drm_notif);
 	if(ret) {
 		NVT_ERR("register drm_notifier failed. ret=%d\n", ret);
 		goto err_register_drm_notif_failed;
