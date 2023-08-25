@@ -84,6 +84,7 @@ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long 
 
 static int32_t nvt_ts_suspend(struct device *dev);
 static int32_t nvt_ts_resume(struct device *dev);
+extern int dsi_panel_lockdown_info_read(unsigned char *plockdowninfo);
 
 
 extern int pen_charge_state_notifier_register_client(struct notifier_block *nb);
@@ -1544,7 +1545,9 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	mutex_lock(&ts->lock);
 
 	if (ts->dev_pm_suspend) {
+		NVT_LOG("ts->dev_pm_suspend, ts->dev_pm_suspend_completion = %d", ts->dev_pm_suspend_completion)
 		ret = wait_for_completion_timeout(&ts->dev_pm_suspend_completion, msecs_to_jiffies(500));
+		NVT_LOG("wait_for_completion_timeout ret = %d", ret)
 		if (!ret) {
 			NVT_ERR("system(spi) can't finished resuming procedure, skip it\n");
 			goto XFER_ERROR;
@@ -1566,6 +1569,11 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 			point_data[1+i*6], point_data[2+i*6], point_data[3+i*6], point_data[4+i*6], point_data[5+i*6], point_data[6+i*6]);
 	}
 	*/
+
+	for (i = 0; i < 10; i++) {
+		NVT_LOG("point_data: %02X %02X %02X %02X %02X %02X  \n",
+			point_data[1+i*6], point_data[2+i*6], point_data[3+i*6], point_data[4+i*6], point_data[5+i*6], point_data[6+i*6]);
+	}
 
 #if NVT_TOUCH_WDT_RECOVERY
 	/* ESD protect by WDT */
@@ -1771,7 +1779,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	} /* if (ts->pen_support) */
 
 XFER_ERROR:
-
+	NVT_LOG("XFER_ERROR\n");
 	mutex_unlock(&ts->lock);
 	return IRQ_HANDLED;
 }
@@ -2130,6 +2138,31 @@ static void update_touchfeature_value_work(struct work_struct *work) {
 		NVT_LOG("set mode:%d = %d", Touch_Resist_RF, temp_set_value);
 	}
 	NVT_LOG("exit");
+}
+
+static void get_lockdown_info(struct work_struct *work)
+{
+	int ret = 0;
+
+	NVT_LOG("lkdown_readed = %d", ts->lkdown_readed);
+
+	if (!ts->lkdown_readed) {
+		ret = dsi_panel_lockdown_info_read(ts->lockdown_info);
+		if (ret < 0) {
+			NVT_ERR("can't get lockdown info");
+		} else {
+			NVT_LOG("Lockdown:0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x\n",
+			ts->lockdown_info[0], ts->lockdown_info[1], ts->lockdown_info[2], ts->lockdown_info[3],
+			ts->lockdown_info[4], ts->lockdown_info[5], ts->lockdown_info[6], ts->lockdown_info[7]);
+		}
+		ts->lkdown_readed = true;
+		NVT_LOG("READ LOCKDOWN!!!");
+	} else {
+		NVT_LOG("use lockdown info that readed before");
+		NVT_LOG("Lockdown:0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x\n",
+			ts->lockdown_info[0], ts->lockdown_info[1], ts->lockdown_info[2], ts->lockdown_info[3],
+			ts->lockdown_info[4], ts->lockdown_info[5], ts->lockdown_info[6], ts->lockdown_info[7]);
+	}
 }
 
 /*******************************************************
@@ -2714,6 +2747,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	nvt_pen_charge_state_change_work(&ts->pen_charge_state_change_work);
 	ts->pen_is_charge = false;
 
+	ts->lkdown_readed =false;
 	pm_stay_awake(&client->dev);
 
 #if WAKEUP_GESTURE
@@ -2739,6 +2773,10 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		ret = -ENOMEM;
 		goto err_create_nvt_fwu_wq_failed;
 	}
+	INIT_DELAYED_WORK(&ts->nvt_lockdown_work, get_lockdown_info);
+	queue_delayed_work(nvt_lockdown_wq, &ts->nvt_lockdown_work, msecs_to_jiffies(4000));
+
+
 	INIT_DELAYED_WORK(&ts->nvt_fwu_work, Boot_Update_Firmware_uwu);
 	// please make sure boot update start after display reset(RESX) sequence
 	// TROIA DI MERDA L'ho trovata
@@ -3220,13 +3258,18 @@ static int32_t nvt_ts_resume(struct device *dev)
 	gpio_set_value(ts->reset_gpio, 1);
 #endif
 	if (nvt_get_dbgfw_status()) {
+		NVT_LOG("nvt_ts_resume - nvt_get_dbgfw_status");
 		ret = nvt_update_firmware(DEFAULT_DEBUG_FW_NAME);
+		NVT_LOG("nvt_update_firmware 0 ret = %d", ret);
 		if (ret < 0) {
 			NVT_ERR("use built-in fw");
 			ret = nvt_update_firmware(ts->fw_name);
+			NVT_LOG("nvt_update_firmware 1 ret = %d", ret);
 		}
 	} else {
+		NVT_LOG("nvt_ts_resume - nvt_get_dbgfw_status else");
 		ret = nvt_update_firmware(ts->fw_name);
+		NVT_LOG("nvt_update_firmware 2 ret = %d", ret);
 	}
 	if (ret)
 		NVT_ERR("download firmware failed\n");
@@ -3324,6 +3367,56 @@ static struct spi_driver nvt_spi_driver = {
 #endif
 	},
 };
+
+
+static bool nvt_off_charger_mode(void)
+{
+	bool charger_mode = false;
+	char charger_node[8] = {'\0'};
+	char *chose = (char *) strnstr(saved_command_line,
+				"androidboot.mode=", strlen(saved_command_line));
+	if (chose) {
+		memcpy(charger_node, (chose + strlen("androidboot.mode=")),
+			sizeof(charger_node) - 1);
+		NVT_LOG("%s: charger_node is %s\n", __func__, charger_node);
+		if (!strncmp(charger_node, "charger", strlen("charger"))) {
+			charger_mode = true;
+		}
+	}
+	return charger_mode;
+}
+
+/*******************************************************
+Description:
+	Driver Install function.
+
+return:
+	Executive Outcomes. 0---succeed. not 0---failed.
+********************************************************/
+static int32_t __init nvt_driver_init(void)
+{
+	int32_t ret = 0;
+
+	NVT_LOG("driver init start\n");
+	if (nvt_off_charger_mode()) {
+		NVT_LOG("off_charger states, %s exit", __func__);
+		return 0;
+	}
+
+	//---add spi driver---
+	ret = spi_register_driver(&nvt_spi_driver);
+	if (ret) {
+		NVT_ERR("failed to add spi driver");
+		goto err_driver;
+	}
+
+	NVT_LOG("finished\n");
+
+err_driver:
+	return ret;
+}
+
+late_initcall(nvt_driver_init);
 
 module_spi_driver(nvt_spi_driver);
 
