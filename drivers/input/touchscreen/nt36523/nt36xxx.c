@@ -122,6 +122,11 @@ const uint16_t gesture_key_array[] = {
 };
 #endif
 
+static DEVICE_ATTR(panel_color, (S_IRUGO), nvt_panel_color_show, NULL);
+static DEVICE_ATTR(panel_vendor, (S_IRUGO), nvt_panel_vendor_show, NULL);
+static DEVICE_ATTR(panel_display, (S_IRUGO), nvt_panel_display_show, NULL);
+
+
 struct attribute *nvt_panel_attr[] = {
 	&dev_attr_panel_color.attr,
 	&dev_attr_panel_vendor.attr,
