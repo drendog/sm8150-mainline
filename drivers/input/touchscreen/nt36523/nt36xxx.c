@@ -1892,11 +1892,11 @@ static int8_t nvt_ts_check_chip_ver_trim(uint32_t chip_ver_trim_addr)
 			buf[1], buf[2], buf[3], buf[4], buf[5], buf[6]);
 
 		//---Stop CRC check to prevent IC auto reboot---
-		if ((buf[1] == 0xFC) ||
+		/* if ((buf[1] == 0xFC) ||
 			((buf[1] == 0xFF) && (buf[2] == 0xFF) && (buf[3] == 0xFF))) {
 			nvt_stop_crc_reboot();
 			continue;
-		}
+		} */
 
 		// compare read chip id on supported list
 		for (list = 0; list < (sizeof(trim_id_table) / sizeof(struct nvt_ts_trim_id_table)); list++) {
@@ -2270,11 +2270,11 @@ void nvt_enable_doubleclick(void)
 	}
 }
 
-static int disable_pen_input_device(bool _disable) {
+static int disable_pen_input_device(bool disable) {
 	uint8_t buf[8] = {0};
 	int32_t ret = 0;
 	// little trolling
-	bool disable = false; 
+	// bool disable = false; 
 
 	NVT_LOG("++\n");
 	if (!bTouchIsAwake || !ts) {
@@ -2283,7 +2283,7 @@ static int disable_pen_input_device(bool _disable) {
 	}
 
 	msleep(35);
-	//disable = (!(ts->pen_input_dev_enable) || ts->pen_is_charge) ? true : disable;
+	disable = (!(ts->pen_input_dev_enable) || ts->pen_is_charge) ? true : disable;
 	// we do a little trolling
 
 	NVT_LOG("ts->pen_input_dev_enable: %s, ts->pen_is_charge: %s, disable: %s",
@@ -2856,7 +2856,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	queue_delayed_work(nvt_lockdown_wq, &ts->nvt_lockdown_work, msecs_to_jiffies(4000));
 
 
-	INIT_DELAYED_WORK(&ts->nvt_fwu_work, Boot_Update_Firmware_uwu);
+	// INIT_DELAYED_WORK(&ts->nvt_fwu_work, Boot_Update_Firmware_uwu);
 	// please make sure boot update start after display reset(RESX) sequence
 	// TROIA DI MERDA L'ho trovata
 	// e' proprio lei, HAHAHHAHAHHAA
