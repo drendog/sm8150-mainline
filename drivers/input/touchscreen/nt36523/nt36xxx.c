@@ -85,7 +85,7 @@ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long 
 
 static int32_t nvt_ts_suspend(struct device *dev);
 static int32_t nvt_ts_resume(struct device *dev);
-extern int dsi_panel_lockdown_info_read(unsigned char *plockdowninfo);
+// extern int dsi_panel_lockdown_info_read(unsigned char *plockdowninfo);
 
 
 extern int pen_charge_state_notifier_register_client(struct notifier_block *nb);
@@ -2148,7 +2148,7 @@ static void get_lockdown_info(struct work_struct *work)
 	NVT_LOG("lkdown_readed = %d", ts->lkdown_readed);
 
 	if (!ts->lkdown_readed) {
-		ret = dsi_panel_lockdown_info_read(ts->lockdown_info);
+		ret = -1;//dsi_panel_lockdown_info_read(ts->lockdown_info);
 		if (ret < 0) {
 			NVT_ERR("can't get lockdown info");
 		} else {
