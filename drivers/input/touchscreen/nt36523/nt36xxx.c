@@ -1803,7 +1803,7 @@ void nvt_stop_crc_reboot(void)
 	buf[0] = 0xFF;
 	buf[1] = 0x01;
 	buf[2] = 0xF6;
-	CTP_SPI_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+	CTP_SPI_WRITE(ts->client, buf, 3);
 
 	/*---read to check if buf is 0xFC which means IC is in CRC reboot ---*/
 	buf[0] = 0x4E;
@@ -1818,29 +1818,29 @@ void nvt_stop_crc_reboot(void)
 			/*---write i2c cmds to reset idle : 1st---*/
 			buf[0]=0x00;
 			buf[1]=0xA5;
-			CTP_SPI_WRITE(ts->client, I2C_HW_Address, buf, 2);
+			CTP_SPI_WRITE(ts->client, buf, 2);
 
 			/*---write i2c cmds to reset idle : 2rd---*/
 			buf[0]=0x00;
 			buf[1]=0xA5;
-			CTP_SPI_WRITE(ts->client, I2C_HW_Address, buf, 2);
+			CTP_SPI_WRITE(ts->client, buf, 2);
 			msleep(1);
 
 			/*---clear CRC_ERR_FLAG---*/
 			buf[0] = 0xFF;
 			buf[1] = 0x03;
 			buf[2] = 0xF1;
-			CTP_SPI_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+			CTP_SPI_WRITE(ts->client, buf, 3);
 
 			buf[0] = 0x35;
 			buf[1] = 0xA5;
-			CTP_SPI_WRITE(ts->client, I2C_BLDR_Address, buf, 2);
+			CTP_SPI_WRITE(ts->client, buf, 2);
 
 			/*---check CRC_ERR_FLAG---*/
 			buf[0] = 0xFF;
 			buf[1] = 0x03;
 			buf[2] = 0xF1;
-			CTP_SPI_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+			CTP_SPI_WRITE(ts->client, buf, 3);
 
 			buf[0] = 0x35;
 			buf[1] = 0x00;
