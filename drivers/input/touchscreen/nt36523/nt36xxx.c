@@ -1602,11 +1602,6 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	}
 	*/
 
-	for (i = 0; i < 10; i++) {
-		NVT_LOG("point_data: %02X %02X %02X %02X %02X %02X  \n",
-			point_data[1+i*6], point_data[2+i*6], point_data[3+i*6], point_data[4+i*6], point_data[5+i*6], point_data[6+i*6]);
-	}
-
 #if NVT_TOUCH_WDT_RECOVERY
 	/* ESD protect by WDT */
 	if (nvt_wdt_fw_recovery(point_data)) {
