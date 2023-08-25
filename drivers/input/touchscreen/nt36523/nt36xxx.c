@@ -2585,7 +2585,9 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 #if ((TOUCH_KEY_NUM > 0) || WAKEUP_GESTURE)
 	int32_t retry = 0;
 #endif
-	NVT_LOG("nvt_ts_probe start\n");
+	struct attribute_group *attrs_p = NULL;
+
+	NVT_LOG("probe start\n");
 
 	ts = kzalloc(sizeof(struct nvt_ts_data), GFP_KERNEL);
 	if (ts == NULL) {
@@ -2645,7 +2647,18 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		NVT_ERR("parse dt error\n");
 		goto err_spi_setup;
 	}
-
+/* TODO: make it work
+	ret = nvt_pinctrl_init(ts);
+	if (!ret && ts->ts_pinctrl) {
+		ret = pinctrl_select_state(ts->ts_pinctrl, ts->pinctrl_state_active);
+		if (ret < 0) {
+			NVT_ERR("Failed to select %s pinstate %d\n",
+				PINCTRL_STATE_ACTIVE, ret);
+		}
+	} else {
+		NVT_ERR("Failed to init pinctrl\n");
+	}
+*/
 	//---request and config GPIOs---
 	ret = nvt_gpio_config(ts);
 	if (ret) {
@@ -2818,17 +2831,23 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		}
 	}
 
-	NVT_LOG("Init Pen probe succeed\n");	
-
 	INIT_WORK(&ts->switch_mode_work, nvt_switch_mode_work);
-	nvt_switch_mode_work(&ts->switch_mode_work);
 	INIT_WORK(&ts->pen_charge_state_change_work, nvt_pen_charge_state_change_work);
-	nvt_pen_charge_state_change_work(&ts->pen_charge_state_change_work);
 	ts->pen_is_charge = false;
 
+/* TODO: make it work 
 	ts->lkdown_readed =false;
 	pm_stay_awake(&client->dev);
-
+	nvt_lockdown_wq = alloc_workqueue("nvt_lockdown_wq", WQ_UNBOUND | WQ_MEM_RECLAIM, 1);
+	if (!nvt_lockdown_wq) {
+		NVT_ERR("nvt_lockdown_wq create workqueue failed\n");
+		ret = -ENOMEM;
+		goto err_create_nvt_lockdown_wq_failed;
+	}
+	INIT_DELAYED_WORK(&ts->nvt_lockdown_work, get_lockdown_info);
+	// please make sure boot update start after display reset(RESX) sequence
+	queue_delayed_work(nvt_lockdown_wq, &ts->nvt_lockdown_work, msecs_to_jiffies(4000));
+*/
 #if WAKEUP_GESTURE
 	device_init_wakeup(&ts->input_dev->dev, 1);
 #endif
@@ -2856,7 +2875,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	// please make sure boot update start after display reset(RESX) sequence
 	queue_delayed_work(nvt_fwu_wq, &ts->nvt_fwu_work, msecs_to_jiffies(14000));
 #endif
-
 
 	NVT_LOG("NVT_TOUCH_ESD_PROTECT is %d\n", NVT_TOUCH_ESD_PROTECT);
 #if NVT_TOUCH_ESD_PROTECT
@@ -2896,6 +2914,24 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	}
 #endif
 
+#ifndef NVT_SAVE_TESTDATA_IN_FILE
+	ret = nvt_test_data_proc_init(ts->client);
+	if (ret < 0) {
+		NVT_ERR("nvt test data interface init failed. ret=%d\n", ret);
+		goto err_mp_proc_init_failed;
+	}
+#endif
+
+	attrs_p = (struct attribute_group *)devm_kzalloc(&client->dev, sizeof(*attrs_p), GFP_KERNEL);
+	if (!attrs_p) {
+		NVT_ERR("no mem to alloc");
+		goto err_mp_proc_init_failed;
+	}
+	ts->attrs = attrs_p;
+	attrs_p->name = "panel_info";
+	attrs_p->attrs = nvt_panel_attr;
+	ret = sysfs_create_group(&client->dev.kobj, ts->attrs);
+
 	ts->event_wq = alloc_workqueue("nvt-event-queue",
 		WQ_UNBOUND | WQ_HIGHPRI | WQ_CPU_INTENSIVE, 1);
 	if (!ts->event_wq) {
@@ -2905,7 +2941,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	}
 	INIT_WORK(&ts->resume_work, nvt_resume_work);
 	INIT_WORK(&ts->suspend_work, nvt_suspend_work);
-
 	ts->set_touchfeature_wq = create_singlethread_workqueue("nvt-set-touchfeature-queue");
 	if (!ts->set_touchfeature_wq) {
 		NVT_ERR("create set touch feature workqueue fail");
@@ -2920,13 +2955,30 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		NVT_ERR("register pen charge state change notifier failed. ret=%d\n", ret);
 		goto err_register_pen_charge_state_failed;
 	}
-
+#if defined(CONFIG_FB)
 #ifdef CONFIG_DRM
 	ts->drm_notif.notifier_call = nvt_drm_notifier_callback;
-	ret = mi_drm_register_client(&ts->drm_notif);
+	ret = drm_register_client(&ts->drm_notif);
 	if(ret) {
 		NVT_ERR("register drm_notifier failed. ret=%d\n", ret);
 		goto err_register_drm_notif_failed;
+	}
+#else
+	ts->fb_notif.notifier_call = nvt_fb_notifier_callback;
+	ret = fb_register_client(&ts->fb_notif);
+	if(ret) {
+		NVT_ERR("register fb_notifier failed. ret=%d\n", ret);
+		goto err_register_fb_notif_failed;
+	}
+#endif
+#elif defined(CONFIG_HAS_EARLYSUSPEND)
+	ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
+	ts->early_suspend.suspend = nvt_ts_early_suspend;
+	ts->early_suspend.resume = nvt_ts_late_resume;
+	ret = register_early_suspend(&ts->early_suspend);
+	if(ret) {
+		NVT_ERR("register early suspend failed. ret=%d\n", ret);
+		goto err_register_early_suspend_failed;
 	}
 #endif
 
@@ -2940,6 +2992,8 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 #ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
 				xiaomi_touch_interfaces.touch_vendor_read = nvt_touch_vendor_read;
+				xiaomi_touch_interfaces.panel_display_read = nvt_panel_display_read;
+				xiaomi_touch_interfaces.panel_vendor_read = nvt_panel_vendor_read;
 				xiaomi_touch_interfaces.panel_color_read = nvt_panel_color_read;
 				xiaomi_touch_interfaces.getModeValue = nvt_get_mode_value;
 				xiaomi_touch_interfaces.setModeValue = nvt_set_cur_value;
@@ -2948,7 +3002,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 				xiaomi_touch_interfaces.palm_sensor_write = nvt_palm_sensor_write;
 				nvt_init_touchmode_data();
 				xiaomitouch_register_modedata(&xiaomi_touch_interfaces);
-				NVT_LOG("xiaomi_touch_interfaces register success\n");
 #endif
 
 	bTouchIsAwake = 1;
@@ -2958,28 +3011,49 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 	return 0;
 
+#if defined(CONFIG_FB)
 #ifdef CONFIG_DRM
-	if (mi_drm_unregister_client(&ts->drm_notif))
+	if (drm_unregister_client(&ts->drm_notif))
 		NVT_ERR("Error occurred while unregistering drm_notifier.\n");
 err_register_drm_notif_failed:
+#else
+	if (fb_unregister_client(&ts->fb_notif))
+		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
+err_register_fb_notif_failed:
+	NVT_LOG("err_register_fb_notif_failed");
 #endif
+#elif defined(CONFIG_HAS_EARLYSUSPEND)
+	unregister_early_suspend(&ts->early_suspend);
+err_register_early_suspend_failed:
+#endif
+	if (pen_charge_state_notifier_unregister_client(&ts->pen_charge_state_notifier))
+			NVT_ERR("Error occurred while unregistering pen charge state notifier.\n");
+err_register_pen_charge_state_failed:
+	NVT_LOG("err_register_pen_charge_state_failed");
+	destroy_workqueue(ts->set_touchfeature_wq);
+err_create_set_touchfeature_work_queue:
+	NVT_LOG("err_create_set_touchfeature_work_queue");
 
+	destroy_workqueue(ts->event_wq);
 err_alloc_work_thread_failed:
+	NVT_LOG("err_alloc_work_thread_failed");
+#ifndef NVT_SAVE_TESTDATA_IN_FILE
+	nvt_test_data_proc_deinit();
+#endif
 #if NVT_TOUCH_MP
 	nvt_mp_proc_deinit();
 err_mp_proc_init_failed:
+	NVT_LOG("err_mp_proc_init_failed");
 #endif
-err_register_pen_charge_state_failed:
-	destroy_workqueue(ts->set_touchfeature_wq);
-err_create_set_touchfeature_work_queue:
-	destroy_workqueue(ts->event_wq);
 #if NVT_TOUCH_EXT_PROC
 	nvt_extra_proc_deinit();
 err_extra_proc_init_failed:
+	NVT_LOG("err_extra_proc_init_failed");
 #endif
 #if NVT_TOUCH_PROC
 	nvt_flash_proc_deinit();
 err_flash_proc_init_failed:
+	NVT_LOG("err_flash_proc_init_failed");
 #endif
 #if NVT_TOUCH_ESD_PROTECT
 	if (nvt_esd_check_wq) {
@@ -2988,6 +3062,7 @@ err_flash_proc_init_failed:
 		nvt_esd_check_wq = NULL;
 	}
 err_create_nvt_esd_check_wq_failed:
+	NVT_LOG("err_create_nvt_esd_check_wq_failed");
 #endif
 #if BOOT_UPDATE_FIRMWARE
 	if (nvt_fwu_wq) {
@@ -2996,7 +3071,15 @@ err_create_nvt_esd_check_wq_failed:
 		nvt_fwu_wq = NULL;
 	}
 err_create_nvt_fwu_wq_failed:
+	NVT_LOG("err_create_nvt_lockdown_wq_failed");
+	if (nvt_lockdown_wq) {
+		cancel_delayed_work_sync(&ts->nvt_lockdown_work);
+		destroy_workqueue(nvt_lockdown_wq);
+		nvt_lockdown_wq = NULL;
+	}
 #endif
+err_create_nvt_lockdown_wq_failed:
+	NVT_LOG("err_create_nvt_lockdown_wq_failed");
 #if WAKEUP_GESTURE
 	device_init_wakeup(&ts->input_dev->dev, 0);
 #endif
