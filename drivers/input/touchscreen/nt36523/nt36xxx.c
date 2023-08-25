@@ -2992,8 +2992,9 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 #ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
 				xiaomi_touch_interfaces.touch_vendor_read = nvt_touch_vendor_read;
-				xiaomi_touch_interfaces.panel_display_read = nvt_panel_display_read;
-				xiaomi_touch_interfaces.panel_vendor_read = nvt_panel_vendor_read;
+				// TODO: make it work
+//				xiaomi_touch_interfaces.panel_display_read = nvt_panel_display_read;
+//				xiaomi_touch_interfaces.panel_vendor_read = nvt_panel_vendor_read;
 				xiaomi_touch_interfaces.panel_color_read = nvt_panel_color_read;
 				xiaomi_touch_interfaces.getModeValue = nvt_get_mode_value;
 				xiaomi_touch_interfaces.setModeValue = nvt_set_cur_value;
@@ -3013,7 +3014,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 #if defined(CONFIG_FB)
 #ifdef CONFIG_DRM
-	if (drm_unregister_client(&ts->drm_notif))
+	if (mi_drm_unregister_client(&ts->drm_notif))
 		NVT_ERR("Error occurred while unregistering drm_notifier.\n");
 err_register_drm_notif_failed:
 #else
