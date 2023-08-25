@@ -1484,7 +1484,7 @@ static int32_t nvt_ts_point_data_checksum(uint8_t *buf, uint8_t length)
 
    // Compare ckecksum and dump fail data
    if (checksum != buf[length]) {
-       NVT_ERR("i2c/spi packet checksum not match. (point_data[%d]=0x%02X, checksum=0x%02X)\n",
+       NVT_ERR("id2c/spi packet checksum not match. (point_data[%d]=0x%02X, checksum=0x%02X)\n",
                length, buf[length], checksum);
 
        for (i = 0; i < 10; i++) {
@@ -1785,90 +1785,6 @@ XFER_ERROR:
 	return IRQ_HANDLED;
 }
 
-
-/*******************************************************
-Description:
-	Novatek touchscreen i2c read function.
-
-return:
-	Executive outcomes. 2---succeed. -5---I/O error
-*******************************************************/
-int32_t CTP_I2C_READ(struct i2c_client *client, uint16_t address, uint8_t *buf, uint16_t len)
-{
-	struct i2c_msg msgs[2];
-	int32_t ret = -1;
-	int32_t retries = 0;
-	
-	mutex_lock(&ts->xbuf_lock);
-
-	msgs[0].flags = !I2C_M_RD;
-	msgs[0].addr  = address;
-	msgs[0].len   = 1;
-	msgs[0].buf   = &buf[0];
-
-	msgs[1].flags = I2C_M_RD;
-	msgs[1].addr  = address;
-	msgs[1].len   = len - 1;
-	msgs[1].buf   = ts->xbuf;
-	//msgs[1].buf   = &buf[1];
-
-	while (retries < 5) {
-		ret = i2c_transfer(client->adapter, msgs, 2);
-		if (ret == 2)	break;
-		retries++;
-		msleep(20);
-		NVT_ERR("error, retry=%d\n", retries);
-	}
-
-	if (unlikely(retries == 5)) {
-		NVT_ERR("error, ret=%d\n", ret);
-		ret = -EIO;
-	}
-	memcpy(buf + 1, ts->xbuf, len - 1);
-
-	mutex_unlock(&ts->xbuf_lock);
-
-	return ret;
-}
-
-/*******************************************************
-Description:
-	Novatek touchscreen i2c write function.
-
-return:
-	Executive outcomes. 1---succeed. -5---I/O error
-*******************************************************/
-int32_t CTP_I2C_WRITE(struct i2c_client *client, uint16_t address, uint8_t *buf, uint16_t len)
-{
-	struct i2c_msg msg;
-	int32_t ret = -1;
-	int32_t retries = 0;
-	mutex_lock(&ts->xbuf_lock);
-
-	msg.flags = !0x0001; //I2C_M_RD;
-	msg.addr  = address;
-	msg.len   = len;
-	memcpy(ts->xbuf, buf, len);
-	msg.buf   = ts->xbuf;
-	while (retries < 5) {
-		ret = i2c_transfer(client->adapter, &msg, 1);
-		if (ret == 1)	break;
-		retries++;
-		msleep(20);
-		NVT_ERR("error, retry=%d\n", retries);
-	}
-
-	if (unlikely(retries == 5)) {
-		NVT_ERR("error, ret=%d\n", ret);
-		ret = -EIO;
-	}
-	
-	mutex_unlock(&ts->xbuf_lock);
-
-	return ret;
-}
-
-
 /*******************************************************
 Description:
 	Novatek touchscreen check and stop crc reboot loop.
@@ -1887,11 +1803,11 @@ void nvt_stop_crc_reboot(void)
 	buf[0] = 0xFF;
 	buf[1] = 0x01;
 	buf[2] = 0xF6;
-	CTP_I2C_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+	CTP_SPI_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
 
 	/*---read to check if buf is 0xFC which means IC is in CRC reboot ---*/
 	buf[0] = 0x4E;
-	CTP_I2C_READ(ts->client, I2C_BLDR_Address, buf, 4);
+	CTP_SPI_READ(ts->client, I2C_BLDR_Address, buf, 4);
 
 	if ((buf[1] == 0xFC) ||
 		((buf[1] == 0xFF) && (buf[2] == 0xFF) && (buf[3] == 0xFF))) {
@@ -1902,33 +1818,33 @@ void nvt_stop_crc_reboot(void)
 			/*---write i2c cmds to reset idle : 1st---*/
 			buf[0]=0x00;
 			buf[1]=0xA5;
-			CTP_I2C_WRITE(ts->client, I2C_HW_Address, buf, 2);
+			CTP_SPI_WRITE(ts->client, I2C_HW_Address, buf, 2);
 
 			/*---write i2c cmds to reset idle : 2rd---*/
 			buf[0]=0x00;
 			buf[1]=0xA5;
-			CTP_I2C_WRITE(ts->client, I2C_HW_Address, buf, 2);
+			CTP_SPI_WRITE(ts->client, I2C_HW_Address, buf, 2);
 			msleep(1);
 
 			/*---clear CRC_ERR_FLAG---*/
 			buf[0] = 0xFF;
 			buf[1] = 0x03;
 			buf[2] = 0xF1;
-			CTP_I2C_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+			CTP_SPI_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
 
 			buf[0] = 0x35;
 			buf[1] = 0xA5;
-			CTP_I2C_WRITE(ts->client, I2C_BLDR_Address, buf, 2);
+			CTP_SPI_WRITE(ts->client, I2C_BLDR_Address, buf, 2);
 
 			/*---check CRC_ERR_FLAG---*/
 			buf[0] = 0xFF;
 			buf[1] = 0x03;
 			buf[2] = 0xF1;
-			CTP_I2C_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+			CTP_SPI_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
 
 			buf[0] = 0x35;
 			buf[1] = 0x00;
-			CTP_I2C_READ(ts->client, I2C_BLDR_Address, buf, 2);
+			CTP_SPI_READ(ts->client, I2C_BLDR_Address, buf, 2);
 
 			if (buf[1] == 0xA5)
 				break;
