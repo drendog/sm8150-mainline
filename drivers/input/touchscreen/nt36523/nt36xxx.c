@@ -122,6 +122,13 @@ const uint16_t gesture_key_array[] = {
 };
 #endif
 
+struct attribute *nvt_panel_attr[] = {
+	&dev_attr_panel_color.attr,
+	&dev_attr_panel_vendor.attr,
+	&dev_attr_panel_display.attr,
+	NULL,
+};
+
 static uint8_t bTouchIsAwake = 0;
 
 /*******************************************************
