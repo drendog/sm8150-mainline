@@ -1745,6 +1745,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	NVT_LOG("input_sync");
 	if ((ts->pen_support && ts->pen_input_dev_enable && !(ts->pen_is_charge)) || 1) {
 		//NVT_LOG("pen_support");
+		NVT_LOG("pen_support=%d, pen_input_dev_enable=%d, pen_is_charge=%d", ts->pen_support, ts->pen_input_dev_enable, ts->pen_is_charge);
 
 		//--- dump pen buf ---
 		printk("%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
