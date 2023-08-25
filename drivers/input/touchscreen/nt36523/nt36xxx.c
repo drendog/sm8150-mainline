@@ -1742,8 +1742,9 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 #endif
 
 	input_sync(ts->input_dev);
-
-	if (ts->pen_support && ts->pen_input_dev_enable && !(ts->pen_is_charge)) {
+	NVT_LOG("input_sync");
+	if ((ts->pen_support && ts->pen_input_dev_enable && !(ts->pen_is_charge)) || 1) {
+		NVT_LOG("pen_support");
 /*
 		//--- dump pen buf ---
 		printk("%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
@@ -1760,6 +1761,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 
 		// parse and handle pen report
 		pen_format_id = point_data[66];
+		NVT_LOG("pen_format_id=%d\n", pen_format_id);
 		if (pen_format_id != 0xFF) {
 			if (pen_format_id == 0x01) {
 				// report pen data
@@ -1795,12 +1797,14 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 				// TBD: pen battery event report
 				NVT_LOG("pen_battery=%d\n", pen_battery);
 			} else if (pen_format_id == 0xF0) {
+				NVT_LOG("pen_format_id=0xF0 DO NOTHING\n");
 				// report Pen ID
 			} else {
 				NVT_ERR("Unknown pen format id!\n");
 				goto XFER_ERROR;
 			}
 		} else { // pen_format_id = 0xFF, i.e. no pen present
+			NVT_LOG("release_pen_event");
 			release_pen_event();
 		}
 	} /* if (ts->pen_support) */
@@ -2372,6 +2376,7 @@ static int nvt_set_cur_value(int nvt_mode, int nvt_value)
 	} else if (nvt_mode == Touch_Pen_ENABLE && ts && nvt_value >= 0) {
 		ts-> db_wakeup = nvt_value ? (ts-> db_wakeup | 0x02) : (ts-> db_wakeup & 0xFD); /* enable pen wake up */
 		ts->pen_input_dev_enable = !!nvt_value;
+		xiaomi_touch_interfaces.touch_mode[nvt_mode][SET_CUR_VALUE] = nvt_value;
 		NVT_LOG("%s pen input dev", ts->pen_input_dev_enable ? "ENABLE" : "DISABLE");
 		disable_pen_input_device(!ts->pen_input_dev_enable);
 		release_pen_event();
