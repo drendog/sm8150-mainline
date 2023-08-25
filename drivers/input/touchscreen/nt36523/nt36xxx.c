@@ -1806,7 +1806,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	} /* if (ts->pen_support) */
 
 XFER_ERROR:
-	NVT_LOG("XFER_ERROR\n");
+	// NVT_LOG("XFER_ERROR\n");
 	mutex_unlock(&ts->lock);
 	return IRQ_HANDLED;
 }
