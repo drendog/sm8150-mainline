@@ -1807,7 +1807,7 @@ void nvt_stop_crc_reboot(void)
 
 	/*---read to check if buf is 0xFC which means IC is in CRC reboot ---*/
 	buf[0] = 0x4E;
-	CTP_SPI_READ(ts->client, I2C_BLDR_Address, buf, 4);
+	CTP_SPI_READ(ts->client, buf, 4);
 
 	if ((buf[1] == 0xFC) ||
 		((buf[1] == 0xFF) && (buf[2] == 0xFF) && (buf[3] == 0xFF))) {
@@ -1844,7 +1844,7 @@ void nvt_stop_crc_reboot(void)
 
 			buf[0] = 0x35;
 			buf[1] = 0x00;
-			CTP_SPI_READ(ts->client, I2C_BLDR_Address, buf, 2);
+			CTP_SPI_READ(ts->client, buf, 2);
 
 			if (buf[1] == 0xA5)
 				break;
