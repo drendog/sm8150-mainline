@@ -1744,7 +1744,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	input_sync(ts->input_dev);
 	NVT_LOG("input_sync");
 	if ((ts->pen_support && ts->pen_input_dev_enable && !(ts->pen_is_charge)) || 1) {
-		NVT_LOG("pen_support");
+		//NVT_LOG("pen_support");
 /*
 		//--- dump pen buf ---
 		printk("%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
@@ -1761,7 +1761,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 
 		// parse and handle pen report
 		pen_format_id = point_data[66];
-		NVT_LOG("pen_format_id=%d\n", pen_format_id);
+		//NVT_LOG("pen_format_id=%d\n", pen_format_id);
 		if (pen_format_id != 0xFF) {
 			if (pen_format_id == 0x01) {
 				// report pen data
@@ -1804,7 +1804,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 				goto XFER_ERROR;
 			}
 		} else { // pen_format_id = 0xFF, i.e. no pen present
-			NVT_LOG("release_pen_event");
+			//NVT_LOG("release_pen_event");
 			release_pen_event();
 		}
 	} /* if (ts->pen_support) */
@@ -1904,7 +1904,8 @@ static int8_t nvt_ts_check_chip_ver_trim(uint32_t chip_ver_trim_addr)
 	int32_t ret = -1;
 
 	//---Check for 5 times---
-	for (retry = 5; retry > 0; retry--) {
+	//for (retry = 5; retry > 0; retry--) {
+	while(1) {
 
 		nvt_bootloader_reset();
 
@@ -2585,6 +2586,14 @@ static void nvt_init_touchmode_data(void)
 	xiaomi_touch_interfaces.touch_mode[Touch_Resist_RF][SET_CUR_VALUE] = 0;
 	xiaomi_touch_interfaces.touch_mode[Touch_Resist_RF][GET_CUR_VALUE] = 0;
 
+	/*pen mode*/
+	xiaomi_touch_interfaces.touch_mode[Touch_Pen_ENABLE][GET_MAX_VALUE] = 1;
+	xiaomi_touch_interfaces.touch_mode[Touch_Pen_ENABLE][GET_MIN_VALUE] = 0;
+	xiaomi_touch_interfaces.touch_mode[Touch_Pen_ENABLE][GET_DEF_VALUE] = 0;
+	xiaomi_touch_interfaces.touch_mode[Touch_Pen_ENABLE][SET_CUR_VALUE] = 0;
+	xiaomi_touch_interfaces.touch_mode[Touch_Pen_ENABLE][GET_CUR_VALUE] = 0;
+
+
 	for (i = 0; i < Touch_Mode_NUM; i++) {
 		NVT_LOG("mode:%d, set cur:%d, get cur:%d, def:%d min:%d max:%d\n",
 			i,
@@ -2798,6 +2807,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	}
 
 	if (ts->pen_support) {
+		NVT_LOG("allocate pen input device\n");
 		//---allocate pen input device---
 		ts->pen_input_dev = input_allocate_device();
 		if (ts->pen_input_dev == NULL) {
