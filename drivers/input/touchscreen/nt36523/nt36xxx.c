@@ -2375,18 +2375,13 @@ static int nvt_set_cur_value(int nvt_mode, int nvt_value)
 		schedule_work(&ts->switch_mode_work);
 		return 0;
 	} else if (nvt_mode == Touch_Pen_ENABLE && ts && nvt_value >= 0) {
+		ts-> db_wakeup = nvt_value ? (ts-> db_wakeup | 0x02) : (ts-> db_wakeup & 0xFD); /* enable pen wake up */
 		ts->pen_input_dev_enable = !!nvt_value;
 		NVT_LOG("%s pen input dev", ts->pen_input_dev_enable ? "ENABLE" : "DISABLE");
 		disable_pen_input_device(!ts->pen_input_dev_enable);
 		release_pen_event();
 		return 0;
 	}
-
-		ts->pen_input_dev_enable = !!nvt_value;
-		NVT_LOG("%s pen input dev", ts->pen_input_dev_enable ? "ENABLE" : "DISABLE");
-		disable_pen_input_device(!ts->pen_input_dev_enable);
-		release_pen_event();
-		return 0;
 
 	if (nvt_value > xiaomi_touch_interfaces.touch_mode[nvt_mode][GET_MAX_VALUE]) {
 		nvt_value = xiaomi_touch_interfaces.touch_mode[nvt_mode][GET_MAX_VALUE];
@@ -3037,6 +3032,10 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 #endif
 
 	bTouchIsAwake = 1;
+	
+	// set pen enabled
+	nvt_set_cur_value(Touch_Pen_Enable, 1);
+
 	NVT_LOG("end\n");
 
 	nvt_irq_enable(true);
