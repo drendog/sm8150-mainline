@@ -47,6 +47,10 @@
 
 //---SPI driver info.---
 #define NVT_SPI_NAME "NVT-ts"
+#define I2C_BLDR_Address 0x01
+#define I2C_FW_Address 0x01
+#define I2C_HW_Address 0x62
+
 
 #if NVT_DEBUG
 #define NVT_LOG(fmt, args...)    pr_err("[%s] %s %d: " fmt, NVT_SPI_NAME, __func__, __LINE__, ##args)

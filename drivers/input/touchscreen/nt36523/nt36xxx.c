@@ -1788,6 +1788,161 @@ XFER_ERROR:
 
 /*******************************************************
 Description:
+	Novatek touchscreen i2c read function.
+
+return:
+	Executive outcomes. 2---succeed. -5---I/O error
+*******************************************************/
+int32_t CTP_I2C_READ(struct i2c_client *client, uint16_t address, uint8_t *buf, uint16_t len)
+{
+	struct i2c_msg msgs[2];
+	int32_t ret = -1;
+	int32_t retries = 0;
+	
+	mutex_lock(&ts->xbuf_lock);
+
+	msgs[0].flags = !I2C_M_RD;
+	msgs[0].addr  = address;
+	msgs[0].len   = 1;
+	msgs[0].buf   = &buf[0];
+
+	msgs[1].flags = I2C_M_RD;
+	msgs[1].addr  = address;
+	msgs[1].len   = len - 1;
+	msgs[1].buf   = ts->xbuf;
+	//msgs[1].buf   = &buf[1];
+
+	while (retries < 5) {
+		ret = i2c_transfer(client->adapter, msgs, 2);
+		if (ret == 2)	break;
+		retries++;
+		msleep(20);
+		NVT_ERR("error, retry=%d\n", retries);
+	}
+
+	if (unlikely(retries == 5)) {
+		NVT_ERR("error, ret=%d\n", ret);
+		ret = -EIO;
+	}
+	memcpy(buf + 1, ts->xbuf, len - 1);
+
+	mutex_unlock(&ts->xbuf_lock);
+
+	return ret;
+}
+
+/*******************************************************
+Description:
+	Novatek touchscreen i2c write function.
+
+return:
+	Executive outcomes. 1---succeed. -5---I/O error
+*******************************************************/
+int32_t CTP_I2C_WRITE(struct i2c_client *client, uint16_t address, uint8_t *buf, uint16_t len)
+{
+	struct i2c_msg msg;
+	int32_t ret = -1;
+	int32_t retries = 0;
+	mutex_lock(&ts->xbuf_lock);
+
+	msg.flags = !0x0001; //I2C_M_RD;
+	msg.addr  = address;
+	msg.len   = len;
+	memcpy(ts->xbuf, buf, len);
+	msg.buf   = ts->xbuf;
+	while (retries < 5) {
+		ret = i2c_transfer(client->adapter, &msg, 1);
+		if (ret == 1)	break;
+		retries++;
+		msleep(20);
+		NVT_ERR("error, retry=%d\n", retries);
+	}
+
+	if (unlikely(retries == 5)) {
+		NVT_ERR("error, ret=%d\n", ret);
+		ret = -EIO;
+	}
+	
+	mutex_unlock(&ts->xbuf_lock);
+
+	return ret;
+}
+
+
+/*******************************************************
+Description:
+	Novatek touchscreen check and stop crc reboot loop.
+
+return:
+	n.a.
+*******************************************************/
+void nvt_stop_crc_reboot(void)
+{
+	uint8_t buf[8] = {0};
+	int32_t retry = 0;
+
+	/*read dummy buffer to check CRC fail reboot is happening or not*/
+
+	/*---change I2C index to prevent geting 0xFF, but not 0xFC---*/
+	buf[0] = 0xFF;
+	buf[1] = 0x01;
+	buf[2] = 0xF6;
+	CTP_I2C_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+
+	/*---read to check if buf is 0xFC which means IC is in CRC reboot ---*/
+	buf[0] = 0x4E;
+	CTP_I2C_READ(ts->client, I2C_BLDR_Address, buf, 4);
+
+	if ((buf[1] == 0xFC) ||
+		((buf[1] == 0xFF) && (buf[2] == 0xFF) && (buf[3] == 0xFF))) {
+
+		/*IC is in CRC fail reboot loop, needs to be stopped!*/
+		for (retry = 5; retry > 0; retry--) {
+
+			/*---write i2c cmds to reset idle : 1st---*/
+			buf[0]=0x00;
+			buf[1]=0xA5;
+			CTP_I2C_WRITE(ts->client, I2C_HW_Address, buf, 2);
+
+			/*---write i2c cmds to reset idle : 2rd---*/
+			buf[0]=0x00;
+			buf[1]=0xA5;
+			CTP_I2C_WRITE(ts->client, I2C_HW_Address, buf, 2);
+			msleep(1);
+
+			/*---clear CRC_ERR_FLAG---*/
+			buf[0] = 0xFF;
+			buf[1] = 0x03;
+			buf[2] = 0xF1;
+			CTP_I2C_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+
+			buf[0] = 0x35;
+			buf[1] = 0xA5;
+			CTP_I2C_WRITE(ts->client, I2C_BLDR_Address, buf, 2);
+
+			/*---check CRC_ERR_FLAG---*/
+			buf[0] = 0xFF;
+			buf[1] = 0x03;
+			buf[2] = 0xF1;
+			CTP_I2C_WRITE(ts->client, I2C_BLDR_Address, buf, 3);
+
+			buf[0] = 0x35;
+			buf[1] = 0x00;
+			CTP_I2C_READ(ts->client, I2C_BLDR_Address, buf, 2);
+
+			if (buf[1] == 0xA5)
+				break;
+		}
+		if (retry == 0)
+			NVT_ERR("CRC auto reboot is not able to be stopped! buf[1]=0x%02X\n", buf[1]);
+	}
+
+	return;
+}
+
+
+/*******************************************************
+Description:
 	Novatek touchscreen check chip version trim function.
 
 return:
@@ -1819,6 +1974,13 @@ static int8_t nvt_ts_check_chip_ver_trim(uint32_t chip_ver_trim_addr)
 		CTP_SPI_READ(ts->client, buf, 7);
 		NVT_LOG("buf[1]=0x%02X, buf[2]=0x%02X, buf[3]=0x%02X, buf[4]=0x%02X, buf[5]=0x%02X, buf[6]=0x%02X\n",
 			buf[1], buf[2], buf[3], buf[4], buf[5], buf[6]);
+
+		//---Stop CRC check to prevent IC auto reboot---
+		if ((buf[1] == 0xFC) ||
+			((buf[1] == 0xFF) && (buf[2] == 0xFF) && (buf[3] == 0xFF))) {
+			nvt_stop_crc_reboot();
+			continue;
+		}
 
 		// compare read chip id on supported list
 		for (list = 0; list < (sizeof(trim_id_table) / sizeof(struct nvt_ts_trim_id_table)); list++) {
