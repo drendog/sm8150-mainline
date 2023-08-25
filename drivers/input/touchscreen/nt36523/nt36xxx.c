@@ -3034,7 +3034,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	bTouchIsAwake = 1;
 	
 	// set pen enabled
-	nvt_set_cur_value(Touch_Pen_Enable, 1);
+	nvt_set_cur_value(Touch_Pen_ENABLE, 1);
 
 	NVT_LOG("end\n");
 
