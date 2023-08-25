@@ -1745,13 +1745,13 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	NVT_LOG("input_sync");
 	if ((ts->pen_support && ts->pen_input_dev_enable && !(ts->pen_is_charge)) || 1) {
 		//NVT_LOG("pen_support");
-/*
+
 		//--- dump pen buf ---
 		printk("%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
 			point_data[66], point_data[67], point_data[68], point_data[69], point_data[70],
 			point_data[71], point_data[72], point_data[73], point_data[74], point_data[75],
 			point_data[76], point_data[77], point_data[78], point_data[79]);
-*/
+
 #if CHECK_PEN_DATA_CHECKSUM
 		if (nvt_ts_pen_data_checksum(&point_data[66], PEN_DATA_LEN)) {
 			// pen data packet checksum not match, skip it
