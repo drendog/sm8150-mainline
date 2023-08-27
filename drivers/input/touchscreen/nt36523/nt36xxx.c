@@ -2116,14 +2116,18 @@ static const struct file_operations tpdbg_ops = {
 
 static void nvt_suspend_work(struct work_struct *work)
 {
+	NVT_LOG("start");
 	struct nvt_ts_data *ts_core = container_of(work, struct nvt_ts_data, suspend_work);
 	nvt_ts_suspend(&ts_core->client->dev);
+	NVT_LOG("end");
 }
 
 static void nvt_resume_work(struct work_struct *work)
 {
+	NVT_LOG("start");
 	struct nvt_ts_data *ts_core = container_of(work, struct nvt_ts_data, resume_work);
 	nvt_ts_resume(&ts_core->client->dev);
+	NVT_LOG("end");
 }
 
 static int nvt_touchfeature_cmd_xsfer(uint8_t *touchfeature)
@@ -2898,7 +2902,8 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 #ifdef CONFIG_FACTORY_BUILD
 	ts->pen_input_dev_enable = 1;
 #else
-	ts->pen_input_dev_enable = 0;
+	// TODO: restore it to 0
+	ts->pen_input_dev_enable = 1; // 0; 
 #endif
 
 #if BOOT_UPDATE_FIRMWARE
