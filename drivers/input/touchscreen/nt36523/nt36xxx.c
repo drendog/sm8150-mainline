@@ -1235,8 +1235,9 @@ static int nvt_get_panel_type(struct nvt_ts_data *ts_data)
 			NVT_ERR("This is TM Display Panel!");
 			break;
 		}
-
-		mdelay(1000);
+		// TODO: restore delay when lockdown is setted
+		// mdelay(1000);
+		mdelay(10);
 	}
 	if (i != 0 && i != 1){
 		i = 1;
