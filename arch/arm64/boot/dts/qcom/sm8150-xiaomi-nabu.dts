@@ -705,6 +705,25 @@
 		/* 523 */
 		novatek,swrst-n8-addr = <0x03F0FE>;
 		novatek,spi-rd-fast-addr = <0x03F310>;
+
+		/* MP */
+		novatek,mp-support-dt;
+		/*new touch faeature default param*/
+		novatek,touch-game-param-config1 = <2 2 1 2 1>;
+		novatek,touch-game-param-config2 = <2 2 2 2 1>;
+		novatek,touch-game-param-config3 = <2 2 3 2 1>;
+
+		novatek,config-array-size = <2>;
+		novatek,cfg_0 {
+			novatek,display-maker = <0x42>;
+			novatek,fw-name = "novatek_nt36523_fw01.bin";
+			novatek,mp-name = "novatek_nt36523_mp01.bin";
+		};
+		novatek,cfg_1 {
+			novatek,display-maker = <0x36>;
+			novatek,fw-name = "novatek_nt36523_fw02.bin";
+			novatek,mp-name = "novatek_nt36523_mp02.bin";
+		};
 	};
 };
 
