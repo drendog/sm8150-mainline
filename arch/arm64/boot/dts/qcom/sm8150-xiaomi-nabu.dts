@@ -727,6 +727,25 @@
 	};
 };
 
+
+&qupv3_se17_i2c {
+	status = "ok";
+	idtp9418: idtp9418@3b {
+		compatible = "idt,p9418";
+		status = "ok";
+		reg = <0x3b>;
+		idt,irq = <&tlmm 95 0x00>;
+		hall,int3 = <&tlmm 101 0x00>;
+		hall,int4 = <&tlmm 134 0x00>;
+		idt,reverse-enable = <&tlmm 3 0x00>;
+		idt,reverse-booset-enable = <&tlmm 47 0x00>;
+		idt,wpc-det = <&tlmm 94 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "idt_active", "idt_suspend";
+		pinctrl-0 = <&idt_int_active &hall_intr3_active &hall_intr4_active &txon_enable_active &power_good_active &reverse_booset_enable_active>;
+		pinctrl-1 = <&idt_int_suspend &hall_intr3_suspend &hall_intr4_suspend &txon_enable_suspend &power_good_suspend &reverse_booset_enable_suspend>;
+	};
+};
+
 //mdss_dsi0_phy and mdss_dsi1_phy enabled at the same time requres "fw_devlink=permissive" (or devlink hack if ufs crashes) should be fixed in 6.0
 &mdss_dsi0 {
 	status = "okay";
