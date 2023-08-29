@@ -712,7 +712,7 @@ static void idtp9220_set_reset(struct idtp9220_device_info *di)
 
 extern char *saved_command_line;
 
-static int get_cmdline(struct idtp9220_device_info *di)
+static int idtp9220_get_cmdline(struct idtp9220_device_info *di)
 {
 	if (strnstr(saved_command_line, "androidboot.mode=",
 		    strlen(saved_command_line))) {
@@ -5769,7 +5769,7 @@ static int idtp9220_probe(struct i2c_client *client,
 		dev_err(di->dev, "%s: hall4 gpio not provided\n", __func__);
 
 	dev_info(di->dev, "[idt] success probe idtp922x driver\n");
-	get_cmdline(di);
+	idtp9220_get_cmdline(di);
 	if (!di->power_off_mode)
 #ifdef CONFIG_FACTORY_BUILD
 		schedule_delayed_work(&di->chg_detect_work, 3 * HZ);
