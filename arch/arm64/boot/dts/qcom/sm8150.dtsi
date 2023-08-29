@@ -2733,6 +2733,35 @@
 					bias-pull-up;
 				};
 			};
+
+			/* SE 17 pin mappings */
+			qupv3_se17_i2c_pins: qupv3_se17_i2c_pins {
+				qupv3_se17_i2c_active: qupv3_se17_i2c_active {
+					mux {
+						pins = "gpio55", "gpio56";
+						function = "qup17";
+					};
+
+					config {
+						pins = "gpio55", "gpio56";
+						drive-strength = <2>;
+						bias-disable;
+					};
+				};
+
+				qupv3_se17_i2c_sleep: qupv3_se17_i2c_sleep {
+					mux {
+						pins = "gpio55", "gpio56";
+						function = "gpio";
+					};
+
+					config {
+						pins = "gpio55", "gpio56";
+						drive-strength = <2>;
+						bias-pull-up;
+					};
+				};
+			};
 		};
 
 		remoteproc_mpss: remoteproc@4080000 {
@@ -5309,5 +5338,4 @@
 	};
 };
 
-#include "sm8150-pinctrl.dtsi"
 #include "sm8150-qupv3.dtsi"
