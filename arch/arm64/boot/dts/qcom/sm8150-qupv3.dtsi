@@ -1,0 +1,53 @@
+/* Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include <dt-bindings/msm/msm-bus-ids.h>
+
+&soc {
+
+	/* QUPv3 East Instances */
+	qupv3_2: qcom,qupv3_2_geni_se@cc0000 {
+		compatible = "qcom,qupv3-geni-se";
+		reg = <0xcc0000 0x6000>;
+		qcom,bus-mas-id = <MSM_BUS_MASTER_QUP_2>;
+		qcom,bus-slv-id = <MSM_BUS_SLAVE_EBI_CH0>;
+		qcom,iommu-s1-bypass;
+		status = "ok";
+
+		iommu_qupv3_2_geni_se_cb: qcom,iommu_qupv3_2_geni_se_cb {
+			compatible = "qcom,qupv3-geni-se-cb";
+			iommus = <&apps_smmu 0x7a3 0x0>;
+		};
+	};
+
+
+	qupv3_se17_i2c: i2c@0xc80000 {
+		compatible = "qcom,i2c-geni";
+		reg = <0xc80000 0x4000>;
+		interrupts = <GIC_SPI 373 0>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clock-names = "se-clk", "m-ahb", "s-ahb";
+		clocks = <&clock_gcc GCC_QUPV3_WRAP2_S0_CLK>,
+			<&clock_gcc GCC_QUPV3_WRAP_2_M_AHB_CLK>,
+			<&clock_gcc GCC_QUPV3_WRAP_2_S_AHB_CLK>;
+		dmas = <&gpi_dma2 0 0 3 64 0>,
+			<&gpi_dma2 1 0 3 64 0>;
+		dma-names = "tx", "rx";
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&qupv3_se17_i2c_active>;
+		pinctrl-1 = <&qupv3_se17_i2c_sleep>;
+		qcom,wrapper-core = <&qupv3_2>;
+		status = "disabled";
+	};
+
+};
