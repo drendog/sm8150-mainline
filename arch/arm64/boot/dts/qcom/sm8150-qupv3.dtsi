@@ -29,6 +29,16 @@
 		};
 	};
 
+	clock_gcc: qcom,gcc {
+		compatible = "qcom,gcc-sm8150", "syscon";
+		reg = <0x100000 0x1f0000>;
+		reg-names = "cc_base";
+		vdd_cx-supply = <&VDD_CX_LEVEL>;
+		vdd_cx_ao-supply = <&VDD_CX_LEVEL_AO>;
+		vdd_mm-supply = <&VDD_MMCX_LEVEL>;
+		#clock-cells = <1>;
+		#reset-cells = <1>;
+	};
 
 	qupv3_se17_i2c: i2c@0xc80000 {
 		compatible = "qcom,i2c-geni";

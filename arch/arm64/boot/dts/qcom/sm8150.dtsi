@@ -5338,4 +5338,5 @@
 	};
 };
 
+#include "sm8150-regulator.dtsi"
 #include "sm8150-qupv3.dtsi"
