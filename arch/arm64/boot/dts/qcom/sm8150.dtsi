@@ -5378,7 +5378,7 @@
 		mbox-desc-offset = <0x2000>;
 		#mbox-cells = <1>;
 	};
-}
+};
 
 #include "sm8150-regulator.dtsi"
 #include "sm8150-qupv3.dtsi"
